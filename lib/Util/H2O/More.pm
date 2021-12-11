@@ -49,16 +49,13 @@ sub baptise_deeply ($$@) {
 
 =head1 NAME
 
-Util::H2O::More - collection of handy Perl B<pure hash reference>
-based objects utilities using C<Util::H2O>'s C<h2o> utility.
-Chiefly, the idea is to provide a I<better> C<bless>, plus some
-other handy methods for performing precise surgery on blessed
-hash references.
+Util::H2O::More - like if C<bless> created accessors for you.
+Intended for I<hash reference>-based Perl OOP only.
 
 =head1 SYNOPSIS
 
 Creating a new module using C<baptise> instead of C<bless>,
-which means it includes accessors (thanks to C<Util::H2O::h2o>.
+which means it includes accessors (thanks to C<Util::H2O::h2o>).
 
     use strict;
     use warnings;
@@ -101,10 +98,14 @@ parameter where one may specify a list of default accessors.
 
 =head2 Why Was This Created?
 
-The short answer is, the original author wanted to maintain
+The really short answer: because C<h2o> doesn't play nice
+inside of the traditional Perl OOP constructor (C<new>) idiom.
+This is not C<h2o>'s fault. This is the original author's fault
+for wanting to use it to do something it was never meant to do.
+
+Implied above is that the original author wanted to maintain
 the usage pattern of C<bless>, but extend it to include the
-generation of accessors. He wanted a I<better bless> - one
-that took care of generating accessor methods automatically.
+generation of accessors. He wanted a I<better bless>.
 
 The long answer...
 
