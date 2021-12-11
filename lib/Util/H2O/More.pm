@@ -93,8 +93,8 @@ Then on a client script,
 =head1 DESCRIPTION
 
 The primary method, C<baptise>, essentially provides the same
-interface as the core keyword C<bless> with an additional third
-parameter where one may specify a list of default accessors.
+interface as the core keyword C<bless> with an additional I<slurpy>
+third parameter where one may specify a list of default accessors.
 
 =head2 Why Was This Created?
 
