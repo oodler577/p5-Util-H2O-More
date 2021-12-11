@@ -156,7 +156,7 @@ C<baptise> and C<bastise_deeply>.
 
 Because C<Util::H2O::More> exports C<h2o> as the basis for its
 operations, C<h2o> is also available without needing to qualify
-its fully qualified name space.
+its full name space.
 
 =back
 
