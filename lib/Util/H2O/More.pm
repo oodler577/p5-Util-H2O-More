@@ -22,7 +22,7 @@ sub baptise ($$@) {
     my ( $ref, $pkg, @default_accessors ) = @_;
 
     my $self;
-    my $real_pkg = sprintf( qq{%s::_%s}, $pkg, _uuid );
+    my $real_pkg = sprintf qq{%s::_%s}, $pkg, _uuid;
 
     # uses -isa to inherit from $pkg; -class to bless with a package name
     # derived from $pkg
@@ -36,7 +36,7 @@ sub baptise_deeply ($$@) {
     my ( $ref, $pkg, @default_accessors ) = @_;
 
     my $self;
-    my $real_pkg = sprintf( qq{%s::_%s}, $pkg, _uuid );
+    my $real_pkg = sprintf qq{%s::_%s}, $pkg, _uuid;
 
     # uses -isa to inherit from $pkg; -class to bless with a package name
     # derived from $pkg
