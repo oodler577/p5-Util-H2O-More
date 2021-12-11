@@ -68,7 +68,7 @@ which means it includes accessors (thanks to C<Util::H2O::h2o>).
     sub new {
       my $pkg    = shift;
       my %opts   = @_;
-      my $self = baptise \%opts, $pkg, qw/foo haz herp derpes/;
+      my $self = baptise \%opts, $pkg, qw/bar haz herp derpes/;
       return $self;
     }
     
@@ -100,12 +100,12 @@ third parameter where one may specify a list of default accessors.
 
 The really short answer: because C<h2o> doesn't play nice
 inside of the traditional Perl OOP constructor (C<new>) idiom.
-This is not C<h2o>'s fault. This is the original author's fault
-for wanting to use it to do something it was never meant to do.
+This is not C<h2o>'s fault. This is my fault for wanting to use
+it to do something it was never meant to do.
 
-Implied above is that the original author wanted to maintain
-the usage pattern of C<bless>, but extend it to include the
-generation of accessors. He wanted a I<better bless>.
+Implied above is that I wanted to maintain the usage pattern of
+C<bless>, but extend it to include the generation of accessors.
+I wanted a I<better bless>.
 
 The long answer...
 
