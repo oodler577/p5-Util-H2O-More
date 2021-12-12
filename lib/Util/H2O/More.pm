@@ -15,7 +15,7 @@ use feature 'state';
 # unique $pkg names (basically what Util::H2O::h2o does
 # if $pkg is not specified using -class
 
-# monatomically increasing
+# monatomically increasing uuid
 sub _uuid {
     state $uuid = 0;
     return ++$uuid;
@@ -51,15 +51,33 @@ sub baptise_deeply ($$@) {
 
 1;
 
+__END__
+
 =head1 NAME
 
 Util::H2O::More - like if C<bless> created accessors for you.
-Intended for I<hash reference>-based Perl OOP only.
+Intended for I<hash reference>-based Perl OOP only. This module
+uses C<Util::H2O::h2o> as the basis for actual object creation;
+but there's no reason other accessor makers couldn't have been
+used or can be used. I just really like C<h2o>. :-)
+
+=head1 CURRENTLY EXPERIMENTAL
+
+This is a new module and still exploring the value and
+presentation of the interface. It may change (until noted here
+otherwise); it may also hopefully attract more C<h2o>-based
+utility methods. C<h2o> has a lot of other options, currently
+the only one exposed via C<baptise_deeply> is the C<-recurse>
+flag; as far as I know this is unique among the C<hash to
+object> modules on CPAN.
 
 =head1 SYNOPSIS
 
 Creating a new module using C<baptise> instead of C<bless>,
 which means it includes accessors (thanks to C<Util::H2O::h2o>).
+Below is an example of a traditional Perl OOP class constructor
+using C<baptise> to define a set of default accessors, in addition
+to any that are created by virtue of the C<%opts> passed.
 
     use strict;
     use warnings;
@@ -68,14 +86,19 @@ which means it includes accessors (thanks to C<Util::H2O::h2o>).
 
     # exports 'h2o' also
     use Util::H2O::More qw/baptise/;
-     
+      
     sub new {
       my $pkg    = shift;
       my %opts   = @_;
+      
+      # replaces bless, defines default constructures and creates
+      # constructors based on what's passed into %opts
+      
       my $self = baptise \%opts, $pkg, qw/bar haz herp derpes/;
+       
       return $self;
     }
-    
+     
     1;
 
 Then on a client script,
@@ -85,14 +108,24 @@ Then on a client script,
      
     use Foo::Bar;
      
-    my $foo = Foo::Bar->new(some => q{thing});
+    my $foo = Foo::Bar->new(some => q{thing}, else => 4);
      
     print $foo->some . qq{\n};
      
     # set bar via default accessor
     $foo->bar(1);
-     
     print $foo->bar . qq{\n};
+    
+    # default accessors also available from the class defined
+    # above,
+    #   $foo->haz, $foo->herp, $foo->derpes
+    
+    # and from the supplied tuple,
+    #   $foo->else
+
+For more example, please look at the classes created for the unit
+tests contained in C<t/lib>. More examples may be forthcoming as
+this module matures.
 
 =head1 DESCRIPTION
 
@@ -169,9 +202,12 @@ its full name space.
 Requires C<Util::H2O> because this module is effectively a wrapper
 around C<h2o>.
 
+It also uses the C<state> keyword, which is only available in perls
+>= 5.10.
+
 =head1 BUGS
 
-Yes, buyer beware.
+Yes, I mean maybe. Buyer beware.
 
 =head1 LICENSE AND COPYRIGHT 
 

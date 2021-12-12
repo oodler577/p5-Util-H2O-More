@@ -30,16 +30,3 @@ is ref $foo_deeply,          q{Foo::_3}, q{ref returns expected internalized pac
 is $foo_deeply->more->other, q{things},  q{value returned by nested hash reference provided to constructor};
 
 done_testing;
-exit;
-
-print Data::Dumper::Dumper($foo_deeply);
-
-print qq{Print accessor\n};
-
-print $foo_deeply->more->other . qq{\n};
-
-$foo_deeply->bar(1);
-
-print $foo_deeply->bar . qq{\n};
-
-1;
