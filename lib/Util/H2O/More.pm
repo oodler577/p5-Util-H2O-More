@@ -3,6 +3,9 @@ use warnings;
 
 package Util::H2O::More;
 use parent q/Exporter/;
+
+our $VERSION = q{0.0.1};
+
 our @EXPORT_OK = (qw/baptise baptise_deeply/);
 
 use Util::H2O qw/h2o/;
@@ -12,9 +15,10 @@ use feature 'state';
 # unique $pkg names (basically what Util::H2O::h2o does
 # if $pkg is not specified using -class
 
+# monatomically increasing
 sub _uuid {
-    state $uuid;
-    return $uuid++;
+    state $uuid = 0;
+    return ++$uuid;
 }
 
 # non-recursive option
