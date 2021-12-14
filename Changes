@@ -1,2 +1,6 @@
 0.0.1  Sat Dec 11 11:05:09 2021
     - initial module
+
+0.0.2  Mon Dec 13 11:05:09 2021
+    - bump to 0.0.2 without TRIAL so
+      it can be installed via cpanm
