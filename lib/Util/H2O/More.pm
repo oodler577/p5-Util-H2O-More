@@ -4,17 +4,23 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.0.2};
+our $VERSION = q{0.0.3};
 
-our @EXPORT_OK = (qw/baptise baptise_deeply/);
+our @EXPORT_OK = (qw/baptise baptise_deeply h2o/);
 
-use Util::H2O qw/h2o/;
+use Util::H2O ();
+
 use feature 'state';
+
+# quick hack to export h2o, uses proper
+# Util::H2O::h2o called with full namespace
+sub h2o {
+    return Util::H2O::h2o @_;
+}
 
 # maintains basically a count to create non-colliding
 # unique $pkg names (basically what Util::H2O::h2o does
 # if $pkg is not specified using -class
-
 # monatomically increasing uuid
 sub _uuid {
     state $uuid = 0;
