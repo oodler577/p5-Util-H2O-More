@@ -22,3 +22,6 @@
       Getopt::Long (examples included)
     - added o2h, to be the "inverse" operation of
       h2o; it supports the -recurse option.
+
+0.0.6 Thu Feb 24 12:07:08 2022 
+    - POD fixes

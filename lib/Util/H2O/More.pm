@@ -4,7 +4,7 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.0.5};
+our $VERSION = q{0.0.6};
 
 our @EXPORT_OK = (qw/baptise baptise_deeply opt2h2o o2h o2h_deeply h2o/);
 
@@ -239,11 +239,6 @@ even if C<h2o> is passed with the C<-isa> and C<-class> flags,
 which are both utilized to achieve the effective outcome of
 C<baptise> and C<bastise -recurse>.
 
-=item C<baptise_deeply, $hash_ref, $pkg, LIST>
-
-B<Deprecated>. Will be removed in future versions of this module.
-Use C<baptise -recurse> instead. See above.
-
 =item C<opt2h2o LIST>
 
 Handy function for working with C<Getopt::Long>, which takes
@@ -312,14 +307,19 @@ C<baptise -recurse>. Same caveat regarding accessors and hash
 keys applies.
 
 Final Note, because this might be on someone's mind. A common
-thing to do for Perl classes that are used for web services
-and thus need to be serialized into JSON for transort may
-often implement a C<TO_JSON> method that provides an unblessed
-hash reference that most JSON encoding methods will detect and
-utilize. That is not unlike what is being done here, so future
-enhancements to C<o2h> may include detecting and calling this
-method if it exists rather than taking the pure value referenced
-in the hash key (at any level in the reference).
+thing to do for Perl classes that are used for web services (and
+thus need to be serialized into JSON for transport) is to often
+implement a C<TO_JSON> method that provides an unblessed hash
+reference that most JSON encoding methods will happly serialize
+(or C<encode>). That is not unlike what is being done with
+C<o2h>, so future enhancements to C<o2h> may include detecting
+and calling C<TO_JSON> if the package blessing the reference
+C<can('TO_JSON').
+
+=item C<baptise_deeply, $hash_ref, $pkg, LIST>
+
+B<Deprecated>. Will be removed in future versions of this module.
+Use C<baptise -recurse> instead. See above.
 
 =back
 
