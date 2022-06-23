@@ -4,9 +4,9 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.0.6};
+our $VERSION = q{0.0.7};
 
-our @EXPORT_OK = (qw/baptise baptise_deeply opt2h2o o2h o2h_deeply h2o/);
+our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h/);
 
 use Util::H2O ();
 
@@ -56,12 +56,6 @@ sub baptise ($$@) {
     return $self;
 }
 
-# DEPRECATED recursive option - now just a wrapper around `baptise -recurse, ...`
-sub baptise_deeply ($$@) {
-    my ( $ref, $pkg, @default_accessors ) = @_;
-    return baptise -recurse, $ref, $pkg, @default_accessors;
-}
-
 # preconditioner for use with Getopt::Long flags; returns just the flag name given
 # a list of option descriptors, e.g., qw/option1=s option2=i option3/;
 
@@ -73,34 +67,8 @@ sub opt2h2o(@) {
 }
 
 # return a dereferences hash (non-recursive); reverse of `h2o'
-sub o2h ($;$) {
-    my $pos0 = shift;
-    if ( $pos0 eq q{-recurse} ) {
-        my $hash_ref = shift;
-        return _o2h_deeply($hash_ref);
-    }
-    my $ref      = ref $pos0;
-    if ( grep { /$ref/ } qw/ARRAY|CODE|FORMAT|GLOB|HASH|SCALAR|undef/ ) {
-        die qq{First argument must be a blessed reference when "-recurse" is not in use!\n};
-    }
-    # like h2o, updates the hash reference in place ("by reference");
-    # and also returns the reference to the anonymous hash
-    return { %$pos0 }; 
-}
-
-# implements depth-first traversal of object, or hash ref for that matter
-sub _o2h_deeply ($;$);    # PROTO needed due to recursion
-
-sub _o2h_deeply ($;$) {
-    my ( $h, $fin ) = @_;
-    my $ref = ref $h;
-    if ( grep { /$ref/ } qw/ARRAY|CODE|FORMAT|GLOB|SCALAR|undef/ ) {
-        return $h;
-    }
-    foreach my $k ( keys %$h ) {
-        $fin->{$k} = _o2h_deeply( $h->{$k}, $fin->{$k} );
-    }
-    return $fin;
+sub o2h {
+  return Util::H2O::o2h @_;
 }
 
 1;
@@ -115,18 +83,8 @@ uses C<Util::H2O::h2o> as the basis for actual object creation;
 but there's no reason other accessor makers couldn't have been
 used or can be used. I just really like C<h2o>. :-)
 
-=head1 CURRENTLY EXPERIMENTAL
-
-This is a new module and still exploring the value and
-presentation of the interface. It may change (until noted here
-otherwise); it may also hopefully attract more C<h2o>-based
-utility methods. C<h2o> has a lot of other options, currently
-the only one exposed via C<baptise> is the C<-recurse> flag;
-as far as I know this is unique among the C<hash to
-object> modules on CPAN.
-
-NOTE: C<baptise_deeply> is being deprecated in favour of properly
-handling the C<-recurse> subroutine flag.
+NOTE: C<baptise_deeply> is be removed favour of properly handling
+the C<-recurse> subroutine flag. Also, this is longer experimental.
 
 =head1 SYNOPSIS
 
@@ -263,7 +221,7 @@ will work perfectly well with C<baptise> and friends.
     use Getopt::Long qw//;
     my @opts = (qw/option1=s options2=s@ option3 option4=i o5|option5=s/);
     my $o = h2o { option1 => q{foo} }, opt2h2o(@opts);
-    Getopt::Long::GetOptionsFromArray( @ARGV, $o, @opts );
+    Getopt::Long::GetOptionsFromArray( \@ARGV, $o, @opts );
     # ...
     # now $o can be used to query all possible options, even if they were
     # never passed at the commandline 
@@ -318,8 +276,7 @@ C<can('TO_JSON').
 
 =item C<baptise_deeply, $hash_ref, $pkg, LIST>
 
-B<Deprecated>. Will be removed in future versions of this module.
-Use C<baptise -recurse> instead. See above.
+This has been removed.
 
 =back
 
