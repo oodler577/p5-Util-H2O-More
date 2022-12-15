@@ -77,6 +77,55 @@ sub o2h {
     return $ref;
 }
 
+# traverses a all ARRAY and HASH references in a data structure reference,
+# looking for HASH references to bless using h2o; basically it's C<h2o -recurse>
+# on performance enhancing drugs
+
+## Notes on implementation
+# * Interface - should accept all things h2o does [what about default accessors?]
+# * All hash refs should get accessors (what about default accessors?)
+# * all arrays to get an vmethod that returns all elements in it 
+# * anything not ARRAY or HASH should be untouched
+
+sub h3o($); # forward declaration to get rid of "too early" warning
+sub h3o($) {
+  my $thing = shift;
+  return $thing if not $thing;
+  my $isa = ref $thing;
+  if ($isa eq q{ARRAY}) {
+     foreach my $element (@$thing) {
+         h3o($element);
+     } 
+  }
+  elsif ($isa eq q{HASH}) {
+     foreach my $keys (keys %$thing) {
+         h3o($thing->{$keys});
+     } 
+     h2o $thing;
+  }
+  return $thing; 
+}
+
+sub o3h($); # forward declaration to get rid of "too early" warning
+sub o3h($) {
+  my $thing = shift;
+  no warnings 'prototype';
+  return $thing if not $thing;
+  my $isa = ref $thing;
+  if ($isa eq q{ARRAY}) {
+     foreach my $element (@$thing) {
+         $element = o3h($element);
+     } 
+  }
+  elsif ($isa eq q{HASH}) {
+     foreach my $key (keys %$thing) {
+         $thing->{$key} = o3h($thing->{$key});
+     } 
+     $thing = o2h $thing;
+  }
+  return o2h $thing; 
+}
+
 1;
 
 __END__
