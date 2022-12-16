@@ -4,9 +4,9 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.0.9};
+our $VERSION = q{0.1.0};
 
-our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h/);
+our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h h3o o3h/);
 
 use Util::H2O ();
 
@@ -67,7 +67,7 @@ sub opt2h2o(@) {
 }
 
 # return a dereferences hash (non-recursive); reverse of `h2o'
-sub o2h {
+sub o2h($) {
     # makes internal package name more generic for baptise created references
     $Util::H2O::_PACKAGE_REGEX = qr/::_[0-9A-Fa-f]+\z/;
     my $ref = Util::H2O::o2h @_;
@@ -90,22 +90,25 @@ sub o2h {
 sub h3o($); # forward declaration to get rid of "too early" warning
 sub h3o($) {
   my $thing = shift;
-  return $thing if not $thing;
   my $isa = ref $thing;
   if ($isa eq q{ARRAY}) {
      foreach my $element (@$thing) {
-         h3o($element);
+         h3o $element;
      } 
   }
   elsif ($isa eq q{HASH}) {
      foreach my $keys (keys %$thing) {
          h3o($thing->{$keys});
      } 
+     # package level wrapper, so this can be monkey patched
+     # if so desired, per documentation
      h2o $thing;
   }
   return $thing; 
 }
 
+# includes internal dereferencing so to be compatible
+# with the behavior of Util::H2O::o2h
 sub o3h($); # forward declaration to get rid of "too early" warning
 sub o3h($) {
   my $thing = shift;
@@ -113,17 +116,19 @@ sub o3h($) {
   return $thing if not $thing;
   my $isa = ref $thing;
   if ($isa eq q{ARRAY}) {
-     foreach my $element (@$thing) {
+     my @_thing = @$thing;
+     foreach my $element (@_thing) {
          $element = o3h($element);
      } 
   }
   elsif ($isa eq q{HASH}) {
-     foreach my $key (keys %$thing) {
-         $thing->{$key} = o3h($thing->{$key});
+     my %_thing = %$thing;
+     foreach my $key (keys %_thing) {
+         $_thing{$key} = o3h($_thing{$key});
      } 
-     $thing = o2h $thing;
+     $thing = Util::H2O::o2h \%_thing;
   }
-  return o2h $thing; 
+  return Util::H2O::o2h $thing; 
 }
 
 1;
@@ -310,6 +315,102 @@ employ automatic serialization steps beyond route handlers. Returning
 a blessed reference would cause the underlying serialization routines
 to warn or C<die> without using C<o2h> to return a pure C<HASH>
 reference.
+
+=item C<h3o REF>
+
+This method is basically a wrapper around C<h2o> that will traverse
+an arbitrarily complex Perl data structure, applying C<h2o> to any
+C<HASH> references along the way.
+
+A common usecase where C<h3o> is useful is a web API call that returns
+some list of C<HASH> references contained inside of an C<ARRAY> reference. 
+
+For example,
+
+  my $array_of_hashes = JSON::decode_json $json;
+  h3o $array_of_hashes;
+  my $co = $array_of_hashes->[3]->company->name;
+
+Given C<$array_of_hashes> contains:
+
+  [
+    {
+      "id": 1,
+      "name": "Leanne Graham",
+      "username": "Bret",
+      "email": "Sincere@april.biz",
+      "address": {
+        "street": "Kulas Light",
+        "suite": "Apt. 556",
+        "city": "Gwenborough",
+        "zipcode": "92998-3874",
+        "geo": {
+          "lat": "-37.3159",
+          "lng": "81.1496"
+        }
+      },
+      "phone": "1-770-736-8031 x56442",
+      "website": "hildegard.org",
+      "company": {
+        "name": "Romaguera-Crona",
+        "catchPhrase": "Multi-layered client-server neural-net",
+        "bs": "harness real-time e-markets"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Ervin Howell",
+      "username": "Antonette",
+      "email": "Shanna@melissa.tv",
+      "address": {
+        "street": "Victor Plains",
+        "suite": "Suite 879",
+        "city": "Wisokyburgh",
+        "zipcode": "90566-7771",
+        "geo": {
+          "lat": "-43.9509",
+          "lng": "-34.4618"
+        }
+      },
+      "phone": "010-692-6593 x09125",
+      "website": "anastasia.net",
+      "company": {
+        "name": "Deckow-Crist",
+        "catchPhrase": "Proactive didactic contingency",
+        "bs": "synergize scalable supply-chains"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Clementine Bauch",
+      "username": "Samantha",
+      "email": "Nathan@yesenia.net",
+      "address": {
+        "street": "Douglas Extension",
+        "suite": "Suite 847",
+        "city": "McKenziehaven",
+        "zipcode": "59590-4157",
+        "geo": {
+          "lat": "-68.6102",
+          "lng": "-47.0653"
+        }
+      },
+      "phone": "1-463-123-4447",
+      "website": "ramiro.info",
+      "company": {
+        "name": "Romaguera-Jacobson",
+        "catchPhrase": "Face to face bifurcated interface",
+        "bs": "e-enable strategic applications"
+      }
+    }
+  ]
+
+  (* froms, https://jsonplaceholder.typicode.com/users)
+
+=item C<o3h REF>
+
+Does for data structures I<objectified> with C<h3o> what C<o2h> does
+for objects created with C<h2o>.
 
 =item C<baptise_deeply, $hash_ref, $pkg, LIST>
 
