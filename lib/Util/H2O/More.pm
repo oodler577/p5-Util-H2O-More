@@ -103,11 +103,12 @@ sub h3o($) {
      my $PUSH = sub { my ($self, @i) = @_; h3o \@i; push @$self, @i; return \@i };
      my $POP = sub { my $self = shift; return pop @$self };
      {
-       no strict 'refs'; *{"${a2o_pkg}::get"}    = $GET;
-       no strict 'refs'; *{"${a2o_pkg}::all"}    = $ALL;
-       no strict 'refs'; *{"${a2o_pkg}::scalar"} = $SCALAR;
-       no strict 'refs'; *{"${a2o_pkg}::push"}   = $PUSH;
-       no strict 'refs'; *{"${a2o_pkg}::pop"}    = $POP;
+       no strict 'refs';
+       *{"${a2o_pkg}::get"}    = $GET;
+       *{"${a2o_pkg}::all"}    = $ALL;
+       *{"${a2o_pkg}::scalar"} = $SCALAR;
+       *{"${a2o_pkg}::push"}   = $PUSH;
+       *{"${a2o_pkg}::pop"}    = $POP;
      };
      foreach my $element (@$thing) {
          h3o $element;
