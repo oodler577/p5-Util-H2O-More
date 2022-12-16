@@ -92,6 +92,23 @@ sub h3o($) {
   my $thing = shift;
   my $isa = ref $thing;
   if ($isa eq q{ARRAY}) {
+     # add a vmethod to get all elements as a list so we don't
+     # have to dereference to iterate
+     my $a2o_pkg = sprintf(qq{%s::_a2o_%d}, __PACKAGE__, int rand 100_000); # internal a2o
+     bless $thing, $a2o_pkg;
+     # add vmethod to wrap around things
+     my $GET = sub { my ($self, $i) = @_; return $self->[$i]; };
+     my $ALL = sub { my $self = shift; return @$self; };
+     my $SCALAR = sub { my $self = shift; return scalar @$self; };
+     my $PUSH = sub { my ($self, @i) = @_; h3o \@i; push @$self, @i; return \@i };
+     my $POP = sub { my $self = shift; return pop @$self };
+     {
+       no strict 'refs'; *{"${a2o_pkg}::get"}    = $GET;
+       no strict 'refs'; *{"${a2o_pkg}::all"}    = $ALL;
+       no strict 'refs'; *{"${a2o_pkg}::scalar"} = $SCALAR;
+       no strict 'refs'; *{"${a2o_pkg}::push"}   = $PUSH;
+       no strict 'refs'; *{"${a2o_pkg}::pop"}    = $POP;
+     };
      foreach my $element (@$thing) {
          h3o $element;
      } 
@@ -412,9 +429,48 @@ Given C<$array_of_hashes> contains:
 Does for data structures I<objectified> with C<h3o> what C<o2h> does
 for objects created with C<h2o>.
 
-=item C<baptise_deeply, $hash_ref, $pkg, LIST>
+=head2 C<ARRAY> I<vmethods>
 
-This has been removed.
+C<h3o> leans into its I<heavy> nature and adds some "virtual" methods to
+C<ARRAY> containers.
+
+=over 8
+
+=item C<all>
+
+Returns a LIST of all items in the C<ARRAY> container.
+ 
+  my @items = $root->some-barray->all;
+
+=item C<get INDEX>
+
+Given an C<ARRAY> container from C<h3o>, returns the element at the given
+index. See C<push> example below for a practical example.
+
+=item C<push LIST>
+
+Pushes LIST onto ARRAY attached to the vmethod called; also applies the
+C<h3o> method to anything I<pushed>.
+
+  my @added = $root->some->barray->push({ foo => 1 }, {foo => 2});
+  my $one   = $root->some->barray->get(0)->foo; # returns 1 via "get"
+  my $two   = $root->some->barray->get(1)->foo; # returns 2 via "get"
+
+=item C<pop>
+
+Pop's an element from C<ARRAY> container available after applying C<h3o> to
+a structure that has C<ARRAY> refs at any level.
+
+  my $item = $root->some-barray->pop;
+
+=item C<scalar>
+
+Returns the number of items in the C<ARRAY> container, which is more
+convenient that doing,
+
+  my $count = scalar @{$root->some->barray->all}; 
+
+=back
 
 =back
 
@@ -440,7 +496,7 @@ It also uses the C<state> keyword, which is only available in perls
 
 =head1 BUGS
 
-Yes, I mean maybe. Buyer beware.
+No. I mean maybe. Buyer beware.
 
 =head1 LICENSE AND COPYRIGHT 
 

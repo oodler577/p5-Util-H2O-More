@@ -121,7 +121,7 @@ my $twentyone = [
 ];
 
 my $i = 0;
-foreach my $e (@{$HoAoH->ten->twentyone}) {
+foreach my $e ($HoAoH->ten->twentyone->all) {
   like ref $e, qr/Util::H2O/, q{Found HASH ref as 'Util::H2O' reference, in list};
   foreach my $k (keys %$e) {
     can_ok $e, ($k);
@@ -129,6 +129,26 @@ foreach my $e (@{$HoAoH->ten->twentyone}) {
   } 
   ++$i;
 }
+
+$i = 0;
+while (my $e = $HoAoH->ten->twentyone->pop) {
+  like ref $e, qr/Util::H2O/, q{(pop) Found HASH ref as 'Util::H2O' reference, in list};
+  foreach my $k (keys %$e) {
+    can_ok $e, ($k);
+  } 
+  ++$i;
+}
+is $HoAoH->ten->twentyone->scalar, 0, q{ARRAY vmethod 'pop' emptied out entire array};
+
+for my $i (1 .. 5) {
+  $HoAoH->ten->twentyone->push({ foo => $i }); # note: for the astute observer, this hash is undecorated
+  is $HoAoH->ten->twentyone->scalar, $i, qq{(item $i) ARRAY vmethod 'push' added something to the array};
+}
+
+require Data::Dumper;
+note Data::Dumper::Dumper($HoAoH);
+
+is $HoAoH->ten->twentyone->scalar, 5, q{'scalar' ARRAY vmethod works};
 
 my $mixed1 = [
   {
