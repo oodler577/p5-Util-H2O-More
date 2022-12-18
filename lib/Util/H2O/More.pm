@@ -92,24 +92,31 @@ sub h3o($) {
   my $thing = shift;
   my $isa = ref $thing;
   if ($isa eq q{ARRAY}) {
-     # add a vmethod to get all elements as a list so we don't
-     # have to dereference to iterate
+     # uses lexical scop of the 'if' to a bless $thing (an ARRAY ref)
+     # and assigns to it some virtual methods for making dealing with
+     # the "lists of C<HASH> references easier, as a container
+     no strict 'refs';
      my $a2o_pkg = sprintf(qq{%s::_a2o_%d}, __PACKAGE__, int rand 100_000); # internal a2o
      bless $thing, $a2o_pkg;
      # add vmethod to wrap around things
      my $GET = sub { my ($self, $i) = @_; return $self->[$i]; };
      my $ALL = sub { my $self = shift; return @$self; };
      my $SCALAR = sub { my $self = shift; return scalar @$self; };
+     # 'push' will apply "h3o" to all elements pushed 
      my $PUSH = sub { my ($self, @i) = @_; h3o \@i; push @$self, @i; return \@i };
+     # 'pop' intentionally does NOT apply "o3h" to anything pop'd
      my $POP = sub { my $self = shift; return pop @$self };
-     {
-       no strict 'refs';
-       *{"${a2o_pkg}::get"}    = $GET;
-       *{"${a2o_pkg}::all"}    = $ALL;
-       *{"${a2o_pkg}::scalar"} = $SCALAR;
-       *{"${a2o_pkg}::push"}   = $PUSH;
-       *{"${a2o_pkg}::pop"}    = $POP;
-     };
+     # 'unshift' will apply "h3o" to all elements unshifted 
+     my $UNSHIFT = sub { my ($self, @i) = @_; h3o \@i; unshift @$self, @i; return \@i };
+     # 'shift' intentionally does NOT apply "o3h" to anything shift'd
+     my $SHIFT = sub { my $self = shift; return shift @$self };
+     *{"${a2o_pkg}::get"}     = $GET;
+     *{"${a2o_pkg}::all"}     = $ALL;
+     *{"${a2o_pkg}::scalar"}  = $SCALAR;
+     *{"${a2o_pkg}::push"}    = $PUSH;
+     *{"${a2o_pkg}::pop"}     = $POP;
+     *{"${a2o_pkg}::unshift"} = $UNSHIFT;
+     *{"${a2o_pkg}::shift"}   = $SHIFT;
      foreach my $element (@$thing) {
          h3o $element;
      } 
@@ -156,18 +163,23 @@ __END__
 =head1 NAME
 
 Util::H2O::More - like if C<bless> created accessors for you.
-Intended for I<hash reference>-based Perl OOP only. This module
+
+C<h2o> is Intended for C<HASH>-based Perl OOP only. This module
 uses C<Util::H2O::h2o> as the basis for actual object creation;
 but there's no reason other accessor makers couldn't have been
 used or can be used. I just really like C<h2o>. :-)
 
-NOTE: C<baptise_deeply> has been removed favour of properly handling
-the C<-recurse> subroutine flag. Also, this is longer experimental.
+However, C<Util::H2O::More> provides a wrapper method now, C<h3o>
+that will find and I<objectify> all C<HASH> refs contained in an
+C<ARRAY>, no matter how deep. This ability is very useful for
+dealing with modern services that return C<ARRAY>s of C<HASH>,
+traditional L<DBI> queries, and other modules that can provide
+C<LIST>s of C<HASH> refs,  such as L<Web::Scraper>.
 
 =head1 SYNOPSIS
 
-Creating a new module using C<baptise> instead of C<bless>,
-which means it includes accessors (thanks to C<Util::H2O::h2o>).
+It is easy to create an I<OOP> module using C<baptise> instead of
+C<bless>, which means it includes accessors (thanks to C<Util::H2O::h2o>).
 Below is an example of a traditional Perl OOP class constructor
 using C<baptise> to define a set of default accessors, in addition
 to any that are created by virtue of the C<%opts> passed.
@@ -349,7 +361,15 @@ For example,
   h3o $array_of_hashes;
   my $co = $array_of_hashes->[3]->company->name;
 
-Given C<$array_of_hashes> contains:
+Here, C<$array_of_hashes> is an C<ARRAY> reference that contains a set
+of elements that are C<HASH> references; a pretty common situation when
+dealing with records from an API or database call.  C<[3]>, refers the
+4th element, which is a C<HASH> reference. This C<HASH> reference has
+an accessor via C<h3o>, and this returns another C<HASH> that has an
+accessor called C<name>.
+
+The structure of C<$array_of_hashes> is based on JSON, e.g., that is of
+the form:
 
   [
     {
@@ -425,15 +445,12 @@ Given C<$array_of_hashes> contains:
 
   (* froms, https://jsonplaceholder.typicode.com/users)
 
-=item C<o3h REF>
+=head3 C<ARRAY> I<vmethods>
 
-Does for data structures I<objectified> with C<h3o> what C<o2h> does
-for objects created with C<h2o>.
-
-=head2 C<ARRAY> I<vmethods>
-
-C<h3o> leans into its I<heavy> nature and adds some "virtual" methods to
-C<ARRAY> containers.
+It is still somewhat inconvenient, though I<idiomatic>, to refer to C<ARRAY>
+elements directly as in the example above. However, it is still inconsistent
+with idea of C<Util::H2O>. So, C<h3o> leans into its I<heavy> nature by adding
+some "virtual" methods to C<ARRAY> containers.
 
 =over 8
 
@@ -464,6 +481,14 @@ a structure that has C<ARRAY> refs at any level.
 
   my $item = $root->some-barray->pop;
 
+=item C<unshift>
+
+Similar to C<push>, just operates on the near end of the C<ARRAY>.
+
+=item C<shift>
+
+Similar to C<pop>, just operates on the near end of the C<ARRAY>.
+
 =item C<scalar>
 
 Returns the number of items in the C<ARRAY> container, which is more
@@ -472,6 +497,12 @@ convenient that doing,
   my $count = scalar @{$root->some->barray->all}; 
 
 =back
+
+
+=item C<o3h REF>
+
+Does for data structures I<objectified> with C<h3o> what C<o2h> does
+for objects created with C<h2o>.
 
 =back
 
