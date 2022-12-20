@@ -4,7 +4,7 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.1};
+our $VERSION = q{0.1.1};
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h h3o o3h/);
 
@@ -102,28 +102,34 @@ sub h3o($) {
         my $a2o_pkg = sprintf( qq{%s::_a2o_%d}, __PACKAGE__, int rand 100_000 );    # internal a2o
         bless $thing, $a2o_pkg;
 
-        # add vmethod to wrap around things
+        ## add vmethod to wrap around things
+
+        # return item at index INDEX
         my $GET    = sub { my ( $self, $i ) = @_; return $self->[$i]; };
+        *{"${a2o_pkg}::get"}     = $GET;
+
+        # return rereferenced ARRAY
         my $ALL    = sub { my $self = shift; return @$self; };
+        *{"${a2o_pkg}::all"}     = $ALL;
+
+        # returns value returned by the 'scalar' keyword
         my $SCALAR = sub { my $self = shift; return scalar @$self; };
+        *{"${a2o_pkg}::scalar"}  = $SCALAR;
 
         # 'push' will apply "h3o" to all elements pushed
         my $PUSH = sub { my ( $self, @i ) = @_; h3o \@i; push @$self, @i; return \@i };
+        *{"${a2o_pkg}::push"}    = $PUSH;
 
         # 'pop' intentionally does NOT apply "o3h" to anything pop'd
         my $POP = sub { my $self = shift; return pop @$self };
+        *{"${a2o_pkg}::pop"}     = $POP;
 
         # 'unshift' will apply "h3o" to all elements unshifted
         my $UNSHIFT = sub { my ( $self, @i ) = @_; h3o \@i; unshift @$self, @i; return \@i };
+        *{"${a2o_pkg}::unshift"} = $UNSHIFT;
 
         # 'shift' intentionally does NOT apply "o3h" to anything shift'd
         my $SHIFT = sub { my $self = shift; return shift @$self };
-        *{"${a2o_pkg}::get"}     = $GET;
-        *{"${a2o_pkg}::all"}     = $ALL;
-        *{"${a2o_pkg}::scalar"}  = $SCALAR;
-        *{"${a2o_pkg}::push"}    = $PUSH;
-        *{"${a2o_pkg}::pop"}     = $POP;
-        *{"${a2o_pkg}::unshift"} = $UNSHIFT;
         *{"${a2o_pkg}::shift"}   = $SHIFT;
 
         foreach my $element (@$thing) {
@@ -292,15 +298,13 @@ as the I<basis> for a I<better bless>.
 
 =head1 METHODS
 
-=over 4
-
-=item C<baptise $hash_ref, $pkg, LIST>
+=head2 C<baptise $hash_ref, $pkg, LIST>
 
 Takes the same first 2 parameters as C<bless>; with the addition
 of a list that defines a set of default accessors that do not
 rely on the top level keys of the provided hash reference.
 
-=item C<baptise -recurse, $hash_ref, $pkg, LIST>
+=head2 C<baptise -recurse, $hash_ref, $pkg, LIST>
 
 Like C<baptise>, but creates accessors recursively for a nested
 hash reference. Uses C<h2o>'s C<-recurse> flag.
@@ -313,7 +317,7 @@ even if C<h2o> is passed with the C<-isa> and C<-class> flags,
 which are both utilized to achieve the effective outcome of
 C<baptise> and C<bastise -recurse>.
 
-=item C<opt2h2o LIST>
+=head2 C<opt2h2o LIST>
 
 Handy function for working with C<Getopt::Long>, which takes
 a list of options meant for C<Getopt::Long>; and extracts the
@@ -343,7 +347,7 @@ will work perfectly well with C<baptise> and friends.
     # now $o can be used to query all possible options, even if they were
     # never passed at the commandline 
 
-=item C<o2h REF>
+=head2 C<o2h REF>
 
 Uses C<Util::H2O::o2h>, so behaves identical to it.  A new hash reference
 is returned, unlike C<h2o> or C<baptise>. See C<Util::H2O>'s POD for
@@ -373,7 +377,7 @@ a blessed reference would cause the underlying serialization routines
 to warn or C<die> without using C<o2h> to return a pure C<HASH>
 reference.
 
-=item C<h3o REF>
+=head2 C<h3o REF>
 
 This method is basically a wrapper around C<h2o> that will traverse
 an arbitrarily complex Perl data structure, applying C<h2o> to any
@@ -445,56 +449,30 @@ the form:
         "bs": "synergize scalable supply-chains"
       }
     },
-    {
-      "id": 3,
-      "name": "Clementine Bauch",
-      "username": "Samantha",
-      "email": "Nathan@yesenia.net",
-      "address": {
-        "street": "Douglas Extension",
-        "suite": "Suite 847",
-        "city": "McKenziehaven",
-        "zipcode": "59590-4157",
-        "geo": {
-          "lat": "-68.6102",
-          "lng": "-47.0653"
-        }
-      },
-      "phone": "1-463-123-4447",
-      "website": "ramiro.info",
-      "company": {
-        "name": "Romaguera-Jacobson",
-        "catchPhrase": "Face to face bifurcated interface",
-        "bs": "e-enable strategic applications"
-      }
-    }
+    ...
   ]
 
   (* froms, https://jsonplaceholder.typicode.com/users)
 
-
-
-C<ARRAY> B<vmethods>
+=head2 C<ARRAY> I<virtual methods>
 
 It is still somewhat inconvenient, though I<idiomatic>, to refer to C<ARRAY>
 elements directly as in the example above. However, it is still inconsistent
 with idea of C<Util::H2O>. So, C<h3o> leans into its I<heavy> nature by adding
 some "virtual" methods to C<ARRAY> containers.
 
-=over 8
-
-=item C<all>
+=head3 C<all>
 
 Returns a LIST of all items in the C<ARRAY> container.
  
   my @items = $root->some-barray->all;
 
-=item C<get INDEX>
+=head3 C<get INDEX>
 
 Given an C<ARRAY> container from C<h3o>, returns the element at the given
 index. See C<push> example below for a practical example.
 
-=item C<push LIST>
+=head3 C<push LIST>
 
 Pushes LIST onto ARRAY attached to the vmethod called; also applies the
 C<h3o> method to anything I<pushed>.
@@ -503,48 +481,44 @@ C<h3o> method to anything I<pushed>.
   my $one   = $root->some->barray->get(0)->foo; # returns 1 via "get"
   my $two   = $root->some->barray->get(1)->foo; # returns 2 via "get"
 
-=item C<pop>
+Items that are C<push>'d are returned for convenient assignment.
+
+=head3 C<pop>
 
 Pop's an element from C<ARRAY> container available after applying C<h3o> to
 a structure that has C<ARRAY> refs at any level.
 
   my $item = $root->some-barray->pop;
 
-=item C<unshift LIST>
+=hread3 C<unshift LIST>
 
 Similar to C<push>, just operates on the near end of the C<ARRAY>.
 
-=item C<shift>
+Items that are C<shift>'d are returned for convenient assignment.
+
+=head3 C<shift>
 
 Similar to C<pop>, just operates on the near end of the C<ARRAY>.
 
-=item C<scalar>
+=head3 C<scalar>
 
 Returns the number of items in the C<ARRAY> container, which is more
 convenient that doing,
 
   my $count = scalar @{$root->some->barray->all}; 
 
-=back
-
-=item C<o3h REF>
+=head2 C<o3h REF>
 
 Does for data structures I<objectified> with C<h3o> what C<o2h> does
 for objects created with C<h2o>.
 
-=back
-
 =head1 EXTERNAL METHODS
 
-=over 4
-
-=item C<h2o>
+=head2 C<h2o>
 
 Because C<Util::H2O::More> exports C<h2o> as the basis for its
 operations, C<h2o> is also available without needing to qualify
 its full name space.
-
-=back
 
 =head1 DEPENDENCIES
 
