@@ -4,7 +4,7 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.1.1};
+our $VERSION = q{0.1.2};
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h h3o o3h/);
 
@@ -172,9 +172,11 @@ __END__
 Util::H2O::More - provides C<baptise>, a drop-in replacement for
 C<bless>; like if C<bless> created accessors for you. This module
 also provides additional methods built using C<h2o> or C<o2h> from
-L<Util::H2O>.
+L<Util::H2O> that allow for the incremental addition of I<OOP> into
+existing or small scale Perl code without having to fully commit
+to a Perl I<OOP> framework or compromise one's personal Perl style.
 
-C<Util::H2O::More> also provides a wrapper method now, C<h3o>
+C<Util::H2O::More> now provides a wrapper method now, C<h3o>
 that will find and I<objectify> all C<HASH> refs contained in
 C<ARRAY>s at any level, no matter how deep. This ability is
 very useful for dealing with modern services that return C<ARRAY>s
@@ -249,26 +251,24 @@ The primary method, C<baptise>, essentially provides the same
 interface as the core keyword C<bless> with an additional I<slurpy>
 third parameter where one may specify a list of default accessors.
 
-=head2 Why Was This Created?
+Ultimately C<h2o> provides a very compelling approach that allows
+one to incrementally add I<OOP> into their Perl. At the very least
+it makes dealing with C<HASH> references much easier, and without
+the committment to a full Perl I<OOP> framework. Perl is meant to
+be I<multi-paradigm>, which means that it should be easy to mix the
+best of different methods into one glorious creation. L<Util::H2O>,
+and by extension, C<Util::H2O::More>; seeks to accomplish making it
+possible for I<OOP> concepts.
 
-The really short answer: because C<h2o> doesn't play nice
-inside of the traditional Perl OOP constructor (C<new>) idiom.
-This is not C<h2o>'s fault. This is my fault for wanting to use
-it to do something it was never meant to do.
-
-Implied above is that I wanted to maintain the usage pattern of
-C<bless>, but extend it to include the generation of accessors.
-I wanted a I<better bless>.
-
-The long answer...
-
-C<h2o> is a deceptively powerful tool that, above all, makes
-it I<easy> and I<fun> to add accessors to I<ad hoc> hash references
-that many Perl developers like to use and that get emitted,
-I<unblessed> by many popular modules. For example, C<HTTP::Tiny>,
-C<Web::Scraper>, and the more common I<select%> methods C<DBI>
-flavors implement. In particular, any C<JSON> returned by a
-C<HTTP::Tiny> web request is not just ublessed, but still serialized.
+C<Util::H2O::h2o> is a deceptively powerful tool that, above all, makes
+it I<easy> and I<fun> to add accessors to I<ad hoc> C<HASH>references
+that many Perl developers like to use and that get returned,
+I<unblessed> by many popular modules. For example, L<HTTP::Tiny>,
+L<Web::Scraper>, and the more common I<select%> methods L<DBI>
+flavors implement. In particular, any L<JSON> returned by a
+L<HTTP::Tiny> web request is not just ublessed, but still serialized.
+Yet another great example is the configuration object returned by
+the very popular module, L<Config::Tiny>.
 
 Still more useful utilities may be built upon C<h2o>, e.g.; C<h3o>
 which is able to handle data structures that contain C<HASH> references
@@ -288,13 +288,13 @@ as the I<basis> for a I<better bless>.
 
 =head1 METHODS
 
-=head2 C<baptise $hash_ref, $pkg, LIST>
+=head2 C<baptise REF, PKG, LIST>
 
 Takes the same first 2 parameters as C<bless>; with the addition
 of a list that defines a set of default accessors that do not
 rely on the top level keys of the provided hash reference.
 
-=head2 C<baptise -recurse, $hash_ref, $pkg, LIST>
+=head3 C<-recurse> option
 
 Like C<baptise>, but creates accessors recursively for a nested
 hash reference. Uses C<h2o>'s C<-recurse> flag.
@@ -444,7 +444,7 @@ the form:
 
   (* froms, https://jsonplaceholder.typicode.com/users)
 
-=head2 C<ARRAY> I<virtual methods>
+=head2 C<ARRAY> container I<vmethods>
 
 It is still somewhat inconvenient, though I<idiomatic>, to refer to C<ARRAY>
 elements directly as in the example above. However, it is still inconsistent
@@ -475,12 +475,12 @@ Items that are C<push>'d are returned for convenient assignment.
 
 =head3 C<pop>
 
-Pop's an element from C<ARRAY> container available after applying C<h3o> to
+Pops an element from C<ARRAY> container available after applying C<h3o> to
 a structure that has C<ARRAY> refs at any level.
 
   my $item = $root->some-barray->pop;
 
-=hread3 C<unshift LIST>
+=head3 C<unshift LIST>
 
 Similar to C<push>, just operates on the near end of the C<ARRAY>.
 
@@ -512,11 +512,18 @@ its full name space.
 
 =head1 DEPENDENCIES
 
+=head2 L<Util::H2O>
+
 Requires C<Util::H2O> because this module is effectively a wrapper
 around C<h2o>.
 
 It also uses the C<state> keyword, which is only available in perls
 >= 5.10.
+
+While some methods are designed to work with external modules, e.g.,
+C<opt2h2o> is meant to work with L<Getopt::Long>; at this time there
+are no dependencies for such methods required by C<Util::H2O::More>
+itself.
 
 =head1 BUGS
 
