@@ -78,16 +78,6 @@ sub o2h($) {
     return $ref;
 }
 
-# traverses a all ARRAY and HASH references in a data structure reference,
-# looking for HASH references to bless using h2o; basically it's C<h2o -recurse>
-# on performance enhancing drugs
-
-## Notes on implementation
-# * Interface - should accept all things h2o does [what about default accessors?]
-# * All hash refs should get accessors (what about default accessors?)
-# * all arrays to get an vmethod that returns all elements in it
-# * anything not ARRAY or HASH should be untouched
-
 sub h3o($);    # forward declaration to get rid of "too early" warning
 
 sub h3o($) {
