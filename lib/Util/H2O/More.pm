@@ -4,7 +4,7 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.1.2};
+our $VERSION = q{0.2.0};
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h h3o o3h/);
 
@@ -68,9 +68,7 @@ sub opt2h2o(@) {
 
 # return a dereferences hash (non-recursive); reverse of `h2o'
 sub o2h($) {
-
-    # makes internal package name more generic for baptise created references
-    $Util::H2O::_PACKAGE_REGEX = qr/::_[0-9A-Fa-f]+\z/;
+    $Util::H2O::_PACKAGE_REGEX = qr/::_[0-9A-Fa-f]+\z/; # makes internal package name more generic for baptise created references
     my $ref = Util::H2O::o2h @_;
     if ( ref $ref ne q{HASH} ) {
         die qq{Could not fully remove top-level reference. Probably an issue with \$Util::H2O_PACKAGE_REGEX\n};
@@ -79,49 +77,13 @@ sub o2h($) {
 }
 
 sub h3o($);    # forward declaration to get rid of "too early" warning
+sub a2o($);
 
 sub h3o($) {
     my $thing = shift;
     my $isa   = ref $thing;
     if ( $isa eq q{ARRAY} ) {
-
-        # uses lexical scop of the 'if' to a bless $thing (an ARRAY ref)
-        # and assigns to it some virtual methods for making dealing with
-        # the "lists of C<HASH> references easier, as a container
-        no strict 'refs';
-        my $a2o_pkg = sprintf( qq{%s::_a2o_%d}, __PACKAGE__, int rand 100_000 );    # internal a2o
-        bless $thing, $a2o_pkg;
-
-        ## add vmethod to wrap around things
-
-        # return item at index INDEX
-        my $GET    = sub { my ( $self, $i ) = @_; return $self->[$i]; };
-        *{"${a2o_pkg}::get"}     = $GET;
-
-        # return rereferenced ARRAY
-        my $ALL    = sub { my $self = shift; return @$self; };
-        *{"${a2o_pkg}::all"}     = $ALL;
-
-        # returns value returned by the 'scalar' keyword
-        my $SCALAR = sub { my $self = shift; return scalar @$self; };
-        *{"${a2o_pkg}::scalar"}  = $SCALAR;
-
-        # 'push' will apply "h3o" to all elements pushed
-        my $PUSH = sub { my ( $self, @i ) = @_; h3o \@i; push @$self, @i; return \@i };
-        *{"${a2o_pkg}::push"}    = $PUSH;
-
-        # 'pop' intentionally does NOT apply "o3h" to anything pop'd
-        my $POP = sub { my $self = shift; return pop @$self };
-        *{"${a2o_pkg}::pop"}     = $POP;
-
-        # 'unshift' will apply "h3o" to all elements unshifted
-        my $UNSHIFT = sub { my ( $self, @i ) = @_; h3o \@i; unshift @$self, @i; return \@i };
-        *{"${a2o_pkg}::unshift"} = $UNSHIFT;
-
-        # 'shift' intentionally does NOT apply "o3h" to anything shift'd
-        my $SHIFT = sub { my $self = shift; return shift @$self };
-        *{"${a2o_pkg}::shift"}   = $SHIFT;
-
+        a2o $thing;
         foreach my $element (@$thing) {
             h3o $element;
         }
@@ -138,27 +100,76 @@ sub h3o($) {
     return $thing;
 }
 
+# blesses ARRAY ref as a container and gives it some virtual methods
+# useful in the context of containing HASH refs that get objectified
+# by h2o
+sub a2o($) {
+    no strict 'refs';
+
+    my $array_ref = shift;
+
+    # uses lexical scop of the 'if' to a bless $array_ref (an ARRAY ref)
+    # and assigns to it some virtual methods for making dealing with
+    # the "lists of C<HASH> references easier, as a container
+
+    my $a2o_pkg = sprintf( qq{%s::__a2o_%d::vmethods}, __PACKAGE__, int rand 100_000_000 );    # internal a2o
+
+    bless $array_ref, $a2o_pkg;
+
+    ## add vmethod to wrap around array_refs
+
+    # return item at index INDEX
+    my $GET = sub { my ( $self, $i ) = @_; return $self->[$i]; };
+    *{"${a2o_pkg}::get"} = $GET;
+
+    # return rereferenced ARRAY
+    my $ALL = sub { my $self = shift; return @$self; };
+    *{"${a2o_pkg}::all"} = $ALL;
+
+    # returns value returned by the 'scalar' keyword
+    my $SCALAR = sub { my $self = shift; return scalar @$self; };
+    *{"${a2o_pkg}::scalar"} = $SCALAR;
+
+    # 'push' will apply "h3o" to all elements pushed
+    my $PUSH = sub { my ( $self, @i ) = @_; h3o \@i; push @$self, @i; return \@i };
+    *{"${a2o_pkg}::push"} = $PUSH;
+
+    # 'pop' intentionally does NOT apply "o3h" to anyarray_ref pop'd
+    my $POP = sub { my $self = shift; return pop @$self };
+    *{"${a2o_pkg}::pop"} = $POP;
+
+    # 'unshift' will apply "h3o" to all elements unshifted
+    my $UNSHIFT = sub { my ( $self, @i ) = @_; h3o \@i; unshift @$self, @i; return \@i };
+    *{"${a2o_pkg}::unshift"} = $UNSHIFT;
+
+    # 'shift' intentionally does NOT apply "o3h" to anyarray_ref shift'd
+    my $SHIFT = sub { my $self = shift; return shift @$self };
+    *{"${a2o_pkg}::shift"} = $SHIFT;
+
+    return $array_ref;
+}
+
+
 # includes internal dereferencing so to be compatible
 # with the behavior of Util::H2O::o2h
 sub o3h($);    # forward declaration to get rid of "too early" warning
 
 sub o3h($) {
     my $thing = shift;
-    no warnings 'prototype';
     return $thing if not $thing;
     my $isa = ref $thing;
-    if ( $isa eq q{ARRAY} ) {
+    if ( $isa =~ m/^Util::H2O::More::__a2o/ ) {
         my @_thing = @$thing;
-        foreach my $element (@_thing) {
-            $element = o3h($element);
+        $thing     = \@_thing;
+        foreach my $element (@$thing) {
+            $element = o3h $element;
         }
     }
-    elsif ( $isa eq q{HASH} ) {
-        my %_thing = %$thing;
-        foreach my $key ( keys %_thing ) {
-            $_thing{$key} = o3h( $_thing{$key} );
+    elsif ( $isa =~ m/^Util::H2O::_/ ) {
+        foreach my $key ( keys %$thing ) {
+            $thing->{$key} = o3h $thing->{$key};
         }
-        $thing = Util::H2O::o2h \%_thing;
+        $thing = Util::H2O::o2h $thing;
     }
     return Util::H2O::o2h $thing;
 }
@@ -294,7 +305,7 @@ Takes the same first 2 parameters as C<bless>; with the addition
 of a list that defines a set of default accessors that do not
 rely on the top level keys of the provided hash reference.
 
-=head3 C<-recurse> option
+The B<-recurse> option:
 
 Like C<baptise>, but creates accessors recursively for a nested
 hash reference. Uses C<h2o>'s C<-recurse> flag.
@@ -444,6 +455,22 @@ the form:
 
   (* froms, https://jsonplaceholder.typicode.com/users)
 
+=head2 C<o3h REF>
+
+Does for data structures I<objectified> with C<h3o> what C<o2h> does
+for objects created with C<h2o>. It only removes the blessing from
+C<Util::H2O::> and C<Util::H2O::More::__a2o> references.
+
+=head2 C<a2o REF>
+
+Used internally.
+
+Used internally to give I<virual methods> to C<ARRAY> ref containers
+potentially holding C<HASH> references.
+
+C<a2o> is not intended to be useful outside of the context of C<h3o>,
+but it's exposed in case it is, anyway.
+
 =head2 C<ARRAY> container I<vmethods>
 
 It is still somewhat inconvenient, though I<idiomatic>, to refer to C<ARRAY>
@@ -497,10 +524,6 @@ convenient that doing,
 
   my $count = scalar @{$root->some->barray->all}; 
 
-=head2 C<o3h REF>
-
-Does for data structures I<objectified> with C<h3o> what C<o2h> does
-for objects created with C<h2o>.
 
 =head1 EXTERNAL METHODS
 
