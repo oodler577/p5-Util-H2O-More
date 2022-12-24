@@ -216,13 +216,13 @@ is $code1->(), $code2->(), q{CODE refs work};
 is_deeply $mixed1, $mixed2, q{Mixed array, including undef and CODE ref treated properly};
 
 # testing o2d some more
-my $foo = [ qw/1 2 3 4 5/, [qw/ 6 7 8 9 /], { foo => 1, code => sub { 1 } }, sub { 2 }, ];
+$foo = [ qw/1 2 3 4 5/, [qw/ 6 7 8 9 /], { foo => 1, code => sub { 1 } }, sub { 2 }, ];
 
 d2o $foo;
 
 like ref $foo, qr/Util::H2O::More::__a2o/, q{setting up for testing o2d};
 
-my $foo2 = o2d $foo;
+$foo2 = o2d $foo;
 
 like ref $foo, qr/Util::H2O::More::__a2o/, q{making sure o2d doesn't effect REF, consistent with o2h};
 
