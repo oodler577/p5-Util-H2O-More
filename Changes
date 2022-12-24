@@ -62,3 +62,6 @@
     - updated POD, added method C<a2o> intended
       for internal use; but some might find it
       useful
+
+0.2.1 Fri Dec 23 15:00:02 2022
+    - renamed h3o, o3h to d2o, o2d

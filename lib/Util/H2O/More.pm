@@ -4,9 +4,9 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.2.0};
+our $VERSION = q{0.2.1};
 
-our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h h3o o3h/);
+our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d/);
 
 use Util::H2O ();
 
@@ -76,21 +76,21 @@ sub o2h($) {
     return $ref;
 }
 
-sub h3o($);    # forward declaration to get rid of "too early" warning
+sub d2o($);    # forward declaration to get rid of "too early" warning
 sub a2o($);
 
-sub h3o($) {
+sub d2o($) {
     my $thing = shift;
     my $isa   = ref $thing;
     if ( $isa eq q{ARRAY} ) {
         a2o $thing;
         foreach my $element (@$thing) {
-            h3o $element;
+            d2o $element;
         }
     }
     elsif ( $isa eq q{HASH} ) {
         foreach my $keys ( keys %$thing ) {
-            h3o( $thing->{$keys} );
+            d2o( $thing->{$keys} );
         }
 
         # package level wrapper, so this can be monkey patched
@@ -130,19 +130,19 @@ sub a2o($) {
     my $SCALAR = sub { my $self = shift; return scalar @$self; };
     *{"${a2o_pkg}::scalar"} = $SCALAR;
 
-    # 'push' will apply "h3o" to all elements pushed
-    my $PUSH = sub { my ( $self, @i ) = @_; h3o \@i; push @$self, @i; return \@i };
+    # 'push' will apply "d2o" to all elements pushed
+    my $PUSH = sub { my ( $self, @i ) = @_; d2o \@i; push @$self, @i; return \@i };
     *{"${a2o_pkg}::push"} = $PUSH;
 
-    # 'pop' intentionally does NOT apply "o3h" to anyarray_ref pop'd
+    # 'pop' intentionally does NOT apply "o2d" to anyarray_ref pop'd
     my $POP = sub { my $self = shift; return pop @$self };
     *{"${a2o_pkg}::pop"} = $POP;
 
-    # 'unshift' will apply "h3o" to all elements unshifted
-    my $UNSHIFT = sub { my ( $self, @i ) = @_; h3o \@i; unshift @$self, @i; return \@i };
+    # 'unshift' will apply "d2o" to all elements unshifted
+    my $UNSHIFT = sub { my ( $self, @i ) = @_; d2o \@i; unshift @$self, @i; return \@i };
     *{"${a2o_pkg}::unshift"} = $UNSHIFT;
 
-    # 'shift' intentionally does NOT apply "o3h" to anyarray_ref shift'd
+    # 'shift' intentionally does NOT apply "o2d" to anyarray_ref shift'd
     my $SHIFT = sub { my $self = shift; return shift @$self };
     *{"${a2o_pkg}::shift"} = $SHIFT;
 
@@ -152,9 +152,9 @@ sub a2o($) {
 
 # includes internal dereferencing so to be compatible
 # with the behavior of Util::H2O::o2h
-sub o3h($);    # forward declaration to get rid of "too early" warning
+sub o2d($);    # forward declaration to get rid of "too early" warning
 
-sub o3h($) {
+sub o2d($) {
     my $thing = shift;
     return $thing if not $thing;
     my $isa = ref $thing;
@@ -162,12 +162,12 @@ sub o3h($) {
         my @_thing = @$thing;
         $thing     = \@_thing;
         foreach my $element (@$thing) {
-            $element = o3h $element;
+            $element = o2d $element;
         }
     }
     elsif ( $isa =~ m/^Util::H2O::_/ ) {
         foreach my $key ( keys %$thing ) {
-            $thing->{$key} = o3h $thing->{$key};
+            $thing->{$key} = o2d $thing->{$key};
         }
         $thing = Util::H2O::o2h $thing;
     }
@@ -187,7 +187,7 @@ L<Util::H2O> that allow for the incremental addition of I<OOP> into
 existing or small scale Perl code without having to fully commit
 to a Perl I<OOP> framework or compromise one's personal Perl style.
 
-C<Util::H2O::More> now provides a wrapper method now, C<h3o>
+C<Util::H2O::More> now provides a wrapper method now, C<d2o>
 that will find and I<objectify> all C<HASH> refs contained in
 C<ARRAY>s at any level, no matter how deep. This ability is
 very useful for dealing with modern services that return C<ARRAY>s
@@ -281,16 +281,16 @@ L<HTTP::Tiny> web request is not just ublessed, but still serialized.
 Yet another great example is the configuration object returned by
 the very popular module, L<Config::Tiny>.
 
-Still more useful utilities may be built upon C<h2o>, e.g.; C<h3o>
+Still more useful utilities may be built upon C<h2o>, e.g.; C<d2o>
 which is able to handle data structures that contain C<HASH> references
 buried or nested arbitrarily within C<ARRAY> references.
 
-For example, C<h3o> cleans things up very nicely for dealing with
+For example, C<d2o> cleans things up very nicely for dealing with
 web APIs:
 
   my $response = h2o HTTP::Tiny->get($JSON_API_URL);
   die if not $response->success; 
-  my $JSON_data_with_accessors = h3o JSON::decode_json $response->content;
+  my $JSON_data_with_accessors = d2o JSON::decode_json $response->content;
 
 Finally, and what started this module; the usage pattern of C<h2o>
 begs it to be able to support being used as a I<drop in> replacement
@@ -378,26 +378,26 @@ a blessed reference would cause the underlying serialization routines
 to warn or C<die> without using C<o2h> to return a pure C<HASH>
 reference.
 
-=head2 C<h3o REF>
+=head2 C<d2o REF>
 
 This method is basically a wrapper around C<h2o> that will traverse
 an arbitrarily complex Perl data structure, applying C<h2o> to any
 C<HASH> references along the way.
 
-A common usecase where C<h3o> is useful is a web API call that returns
+A common usecase where C<d2o> is useful is a web API call that returns
 some list of C<HASH> references contained inside of an C<ARRAY> reference. 
 
 For example,
 
   my $array_of_hashes = JSON::decode_json $json;
-  h3o $array_of_hashes;
+  d2o $array_of_hashes;
   my $co = $array_of_hashes->[3]->company->name;
 
 Here, C<$array_of_hashes> is an C<ARRAY> reference that contains a set
 of elements that are C<HASH> references; a pretty common situation when
 dealing with records from an API or database call.  C<[3]>, refers the
 4th element, which is a C<HASH> reference. This C<HASH> reference has
-an accessor via C<h3o>, and this returns another C<HASH> that has an
+an accessor via C<d2o>, and this returns another C<HASH> that has an
 accessor called C<name>.
 
 The structure of C<$array_of_hashes> is based on JSON, e.g., that is of
@@ -455,9 +455,9 @@ the form:
 
   (* froms, https://jsonplaceholder.typicode.com/users)
 
-=head2 C<o3h REF>
+=head2 C<o2d REF>
 
-Does for data structures I<objectified> with C<h3o> what C<o2h> does
+Does for data structures I<objectified> with C<d2o> what C<o2h> does
 for objects created with C<h2o>. It only removes the blessing from
 C<Util::H2O::> and C<Util::H2O::More::__a2o> references.
 
@@ -468,14 +468,14 @@ Used internally.
 Used internally to give I<virual methods> to C<ARRAY> ref containers
 potentially holding C<HASH> references.
 
-C<a2o> is not intended to be useful outside of the context of C<h3o>,
+C<a2o> is not intended to be useful outside of the context of C<d2o>,
 but it's exposed in case it is, anyway.
 
 =head2 C<ARRAY> container I<vmethods>
 
 It is still somewhat inconvenient, though I<idiomatic>, to refer to C<ARRAY>
 elements directly as in the example above. However, it is still inconsistent
-with idea of C<Util::H2O>. So, C<h3o> leans into its I<heavy> nature by adding
+with idea of C<Util::H2O>. So, C<d2o> leans into its I<heavy> nature by adding
 some "virtual" methods to C<ARRAY> containers.
 
 =head3 C<all>
@@ -486,13 +486,13 @@ Returns a LIST of all items in the C<ARRAY> container.
 
 =head3 C<get INDEX>
 
-Given an C<ARRAY> container from C<h3o>, returns the element at the given
+Given an C<ARRAY> container from C<d2o>, returns the element at the given
 index. See C<push> example below for a practical example.
 
 =head3 C<push LIST>
 
 Pushes LIST onto ARRAY attached to the vmethod called; also applies the
-C<h3o> method to anything I<pushed>.
+C<d2o> method to anything I<pushed>.
 
   my @added = $root->some->barray->push({ foo => 1 }, {foo => 2});
   my $one   = $root->some->barray->get(0)->foo; # returns 1 via "get"
@@ -502,7 +502,7 @@ Items that are C<push>'d are returned for convenient assignment.
 
 =head3 C<pop>
 
-Pops an element from C<ARRAY> container available after applying C<h3o> to
+Pops an element from C<ARRAY> container available after applying C<d2o> to
 a structure that has C<ARRAY> refs at any level.
 
   my $item = $root->some-barray->pop;
