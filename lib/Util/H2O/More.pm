@@ -4,9 +4,9 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.2.1};
+our $VERSION = q{0.2.2};
 
-our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d/);
+our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2o o2ini/);
 
 use Util::H2O ();
 
@@ -59,11 +59,33 @@ sub baptise ($$@) {
 # preconditioner for use with Getopt::Long flags; returns just the flag name given
 # a list of option descriptors, e.g., qw/option1=s option2=i option3/;
 
-# flags to keys
+# Getopts to keys
 sub opt2h2o(@) {
     my @getopt_def = @_;
     my @flags_only = map { m/([^=|\s]+)/g; $1 } @getopt_def;
     return @flags_only;
+}
+
+# general form of method used to give accessors to Config::Tiny in Util::H2O's
+# POD documentation
+sub o2h2o ($) {
+   my $ref = shift;
+   return h2o -recurse, {%{ $ref }};
+}
+
+# more specific helper app that uses Config::Tiny->read and o2h2o to get a config
+# object back from an .ini; requries Config::Tiny
+sub ini2o ($) {
+   my $filename = shift;
+   require Config::Tiny;
+   return o2h2o( Config::Tiny->read($filename) );
+}
+
+# write out the INI file
+sub o2ini ($$) {
+  my ($config, $filename) = @_;
+  require Config::Tiny;
+  return Config::Tiny->new(Util::H2O::o2h $config)->write($filename);
 }
 
 # return a dereferences hash (non-recursive); reverse of `h2o'
@@ -348,6 +370,52 @@ will work perfectly well with C<baptise> and friends.
     # now $o can be used to query all possible options, even if they were
     # never passed at the commandline 
 
+=head2 C<ini2o FILENAME>
+
+Takes the name of a file, uses L<Config::Tiny> to open it, then gives it accessors
+using internally, C<o2h2o>, described below.
+
+=head2 C<o2ini REF, FILENAME>
+
+Takes and object created via C<ini2o> and writes it back out to C<FILENAME> in the
+proper I<INI> format, using L<Config::Tiny>.
+
+=head2 C<o2h2o REF>
+
+Primarily inspired by L<Util::H2O>'s example for adding accessors to an reference
+that has already been blessed by another package. The motivating example is one that
+shows how to add accessors to a L<Config::Tiny> object.
+
+Given some configuration file using INI, let's say: C<~/my.cnf>:
+
+  [section1]
+  var1=foo
+  var2=bar
+  
+  [section2]
+  var3=herp
+  var4=derp
+
+We can parse it with L<Config::Tiny>, then give it accessors using the following
+two examples, which are equivalent.
+
+  my $INI_file = qq{~/my.cnf};
+
+  # 1. using just Util::H2O's h2o
+  my $config1  = h2o -recurse, {%{ Config::Tiny->read($INI_file) }};
+
+  # 2. using Util::H2O::More's o2h2o
+  my $config2  = o2h2o( Config::Tiny->read($INI_file) );
+
+Note, in example #2, parenthesis are used necessarily because C<perl> seems to confuse
+C<o2h2o> for an indirect method call on C<Config::Tiny>. An example that uses two
+lines, shows better what C<o2h2o> is doing:
+
+  my $INI_file = qq{~/my.cnf};
+
+  my $_config = Config::Tiny->read($INI_file);
+  my $config  = o2h2o $_config;
+   
 =head2 C<o2h REF>
 
 Uses C<Util::H2O::o2h>, so behaves identical to it.  A new hash reference
