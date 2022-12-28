@@ -69,4 +69,5 @@
 0.2.2 Tue Dec 28 15:00:03 2022
     - added helper methods for use with configuration
       files: ini2o, o2ini, o2h2o
-    - added dependency to Config::Tiny for ini2o and o2ini
+    - added a dependency of Config::Tiny for ini2o and
+      o2ini

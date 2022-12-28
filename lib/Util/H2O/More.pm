@@ -342,10 +342,9 @@ C<baptise> and C<bastise -recurse>.
 
 =head2 C<opt2h2o LIST>
 
-Handy function for working with C<Getopt::Long>, which takes
-a list of options meant for C<Getopt::Long>; and extracts the
-flag names so that they may be used to create default accessors
-without having more than one list. E.g.,
+Handy function for working with C<Getopt::Long>, which takes a list of options
+meant for C<Getopt::Long>; and extracts the flag names so that they may be
+used to create default accessors without having more than one list. E.g.,
 
     use Getopt::Long qw//;
     my @opts = (qw/option1=s options2=s@ option3 option4=i o5|option5=s/);
@@ -357,9 +356,9 @@ without having more than one list. E.g.,
       do_the_thing();
     }
 
-Note: default values for options may still be placed inside
-of the anonymous hash being I<objectified> via C<h2o>. This
-will work perfectly well with C<baptise> and friends.
+Note: default values for options may still be placed inside of the anonymous
+hash being I<objectified> via C<h2o>. This will work perfectly well with
+C<baptise> and friends.
 
     use Getopt::Long qw//;
     my @opts = (qw/option1=s options2=s@ option3 option4=i o5|option5=s/);
@@ -372,21 +371,10 @@ will work perfectly well with C<baptise> and friends.
 
 =head2 C<ini2o FILENAME>
 
-Takes the name of a file, uses L<Config::Tiny> to open it, then gives it accessors
-using internally, C<o2h2o>, described below.
+Takes the name of a file, uses L<Config::Tiny> to open it, then gives it
+accessors using internally, C<o2h2o>, described below.
 
-=head2 C<o2ini REF, FILENAME>
-
-Takes and object created via C<ini2o> and writes it back out to C<FILENAME> in the
-proper I<INI> format, using L<Config::Tiny>.
-
-=head2 C<o2h2o REF>
-
-Primarily inspired by L<Util::H2O>'s example for adding accessors to an reference
-that has already been blessed by another package. The motivating example is one that
-shows how to add accessors to a L<Config::Tiny> object.
-
-Given some configuration file using INI, let's say: C<~/my.cnf>:
+Given some configuration file using INI:
 
   [section1]
   var1=foo
@@ -396,26 +384,34 @@ Given some configuration file using INI, let's say: C<~/my.cnf>:
   var3=herp
   var4=derp
 
-We can parse it with L<Config::Tiny>, then give it accessors using the following
-two examples, which are equivalent.
+We can parse it with L<Config::Tiny> and objectify it with C<h2o>:
 
-  my $INI_file = qq{~/my.cnf};
+  use Util::H2O::More qw/ini2o/;
+  my $config = ini2o qq{/path/to/my/config.ini}
+  # ... $config now has accessors based Config::Tiny's read of config.ini
 
-  # 1. using just Util::H2O's h2o
-  my $config1  = h2o -recurse, {%{ Config::Tiny->read($INI_file) }};
+=head2 C<o2ini REF, FILENAME>
 
-  # 2. using Util::H2O::More's o2h2o
-  my $config2  = o2h2o( Config::Tiny->read($INI_file) );
+Takes and object created via C<ini2o> and writes it back out to C<FILENAME>
+in the proper I<INI> format, using L<Config::Tiny>.
 
-Note, in example #2, parenthesis are used necessarily because C<perl> seems to confuse
-C<o2h2o> for an indirect method call on C<Config::Tiny>. An example that uses two
-lines, shows better what C<o2h2o> is doing:
+Given the example in C<ini2o>, we can go a step further and writ eout a new
+configuration file after reading it and modifying a value.
 
-  my $INI_file = qq{~/my.cnf};
+  use Util::H2O::More qw/ini2o o2ini/;
 
-  my $_config = Config::Tiny->read($INI_file);
-  my $config  = o2h2o $_config;
-   
+  my $config = ini2o q{/path/to/my/config.ini}
+
+  # update $config, write it out as a different file
+  $config->section1->var1("some new value");
+  o2ini $config, q{/path/to/my/other-config.ini};
+
+=head2 C<o2h2o REF>
+
+Primarily inspired by L<Util::H2O>'s example for adding accessors to an
+reference that has already been blessed by another package. The motivating
+example is one that shows how to add accessors to a L<Config::Tiny> object.
+
 =head2 C<o2h REF>
 
 Uses C<Util::H2O::o2h>, so behaves identical to it.  A new hash reference
