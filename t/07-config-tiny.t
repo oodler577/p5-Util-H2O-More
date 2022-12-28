@@ -8,7 +8,7 @@ use Util::H2O::More qw/o2h2o ini2o o2ini/;
 use Config::Tiny qw//;
 use File::Temp qw/tempfile/;
 
-my $c = o2h2o(Config::Tiny->read(qq{$Bin/../examples/test.ini}));
+my $c = o2h2o(Config::Tiny->read(qq{$Bin/test.ini}));
 
 is $c->section1->var1, q{foo}, q{o2h2p handles Config::Tiny object as expected};
 
