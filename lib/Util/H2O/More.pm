@@ -4,7 +4,7 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.2.4};
+our $VERSION = q{0.2.5};
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o h2o2ini/);
 
@@ -517,6 +517,22 @@ the form:
   ]
 
   (* froms, https://jsonplaceholder.typicode.com/users)
+
+=head3 C<h2o>'s C<-array> Modifier
+
+As of version 0.20 of L<Util::H2O>, C<h2o> has now a C<-arrays> method
+that does something very similar. C<d2o> was released shortly after it
+was released in L<Util::H2O>, and had the author of this module known
+about it, he would not have created C<d2o>. Nonetheless, C<d2o> does some
+things C<-arrays> doesn't (and similarly, when it's applied to C<o2h>).
+
+The biggest different seems to be C<h2o> doesn't bless the C<ARRAY> 
+containers or provide virtual methods. Be advised, however, C<-arrays>
+is probably sufficient for the original use case C<d2o> was originally
+create for; i.e., more easily I<objectifying> complicated data structures
+obtained from JSON return web APIs. the virtual methods added to C<ARRAY>s
+is not something one would expect form C<h2o>, which strives to provide
+a I<lite> or I<tiny> touch.
 
 =head2 C<o2d REF>
 

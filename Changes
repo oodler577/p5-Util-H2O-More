@@ -82,3 +82,10 @@
       helper apps, like opt2h2o (sorry if this causes
       anyone problems; I don't assume many people use
       this too heavily atm).
+
+0.2.5 Fri Jan 27 15:00:52 2023
+    - documentation update only
+    - added mention of h2o's "-arrays" in the d2o section;
+      so "d2o" and "o2d" alone are probably not reason enough
+      to use Util::H2O::More of the stock h2o with "-arrays"
+      when dealing with complex results from a web API
