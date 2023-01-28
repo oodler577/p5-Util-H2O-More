@@ -4,7 +4,7 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.2.5};
+our $VERSION = q{0.2.6};
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o h2o2ini/);
 
@@ -524,7 +524,8 @@ As of version 0.20 of L<Util::H2O>, C<h2o> has now a C<-arrays> modifier
 that does something very similar to C<d2o>, which was released shortly after
 C<-arrays> was released in L<Util::H2O>. Had the author of this module known
 about it, he would not have created C<d2o>. Nonetheless, C<d2o> does some
-things C<-arrays> doesn't do (and similarly, when it's applied to C<o2h>).
+things C<-arrays> doesn't do (and similarly, when C<o2h -arrays> versus 
+C<o2d>).
 
 The biggest difference seems to be that C<h2o> doesn't bless the C<ARRAY> 
 containers or provide virtual methods. Be advised, however, C<-arrays>

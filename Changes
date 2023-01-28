@@ -89,3 +89,7 @@
       so "d2o" and "o2d" alone are probably not reason enough
       to use Util::H2O::More of the stock h2o with "-arrays"
       when dealing with complex results from a web API
+
+0.2.6 Sat Jan 28 15:00:53 2023
+    - incremented dependency on latest version of Util::H2O (0.22)
+    - more POD wording fixes
