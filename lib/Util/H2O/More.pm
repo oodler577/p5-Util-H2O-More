@@ -520,19 +520,20 @@ the form:
 
 =head3 C<h2o>'s C<-array> Modifier
 
-As of version 0.20 of L<Util::H2O>, C<h2o> has now a C<-arrays> method
-that does something very similar. C<d2o> was released shortly after it
-was released in L<Util::H2O>, and had the author of this module known
+As of version 0.20 of L<Util::H2O>, C<h2o> has now a C<-arrays> modifier 
+that does something very similar to C<d2o>, which was released shortly after
+C<-arrays> was released in L<Util::H2O>. Had the author of this module known
 about it, he would not have created C<d2o>. Nonetheless, C<d2o> does some
-things C<-arrays> doesn't (and similarly, when it's applied to C<o2h>).
+things C<-arrays> doesn't do (and similarly, when it's applied to C<o2h>).
 
-The biggest different seems to be C<h2o> doesn't bless the C<ARRAY> 
+The biggest difference seems to be that C<h2o> doesn't bless the C<ARRAY> 
 containers or provide virtual methods. Be advised, however, C<-arrays>
-is probably sufficient for the original use case C<d2o> was originally
-create for; i.e., more easily I<objectifying> complicated data structures
-obtained from JSON return web APIs. the virtual methods added to C<ARRAY>s
-is not something one would expect form C<h2o>, which strives to provide
-a I<lite> or I<tiny> touch.
+is probably sufficient for the use case C<d2o> was originally create for;
+i.e., to more easily I<objectify> complicated data structures obtained from
+things like JSON returned from web APIs. the virtual methods added to C<ARRAY>s
+is not something one would expect form C<h2o>, which strives to provide a
+I<lite> or I<tiny> touch. The vmethods do make iterating over the C<ARRAY>s
+easier, though.
 
 =head2 C<o2d REF>
 
