@@ -1,0 +1,73 @@
+0.0.1 Sat Dec 11 11:05:09 2021
+    - initial module
+
+0.0.2 Mon Dec 13 11:05:09 2021
+    - bump to 0.0.2 without TRIAL so
+      it can be installed via cpanm
+
+0.0.3 Mon Dec 13 12:05:09 2021
+    - `h2o` can now be properly exported
+      via Util::H2O::More qw/h2o/;
+
+0.0.4 Sun Jan 2 12:05:09 2022
+    - no functional change, build only impacts
+    - specified minimal Util::H2O version
+      due to "-isa" not being supported
+      before v0.14
+
+0.0.5 Thu Feb 24 12:05:08 2022 
+    - deprecating baptise_deeply in favor of
+      supporting -recurse in the baptise command
+    - add opt2h2o for efficiently using h2o with
+      Getopt::Long (examples included)
+    - added o2h, to be the "inverse" operation of
+      h2o; it supports the -recurse option.
+
+0.0.6 Thu Feb 24 12:07:08 2022 
+    - POD fixes
+
+0.0.7 Thu Jun 23 12:07:08 2022
+    - using Util::H2O::o2h instead of the original
+      implementation. Bumped req'd version of
+      Util::H2O to >= 0.18 because of this.
+    - Updated documentation and removed "experimental"
+      warning. TPRC 2022 release!
+
+0.0.8 Thu Jun 23 14:16:00 2022
+    - for baptise created objects, needed to adjust
+      $Util::H2O::_PACKAGE_REGEX to be more general
+
+0.0.9 Fri Nov 25 14:00:00 2022
+    - corrected some minor documentation and code
+      examples for using opt2h2o with Getopt::Long
+
+0.1   Thu Dec 16 14:00:00 2022
+    - added h3o for bags of HASH refs, h3o and
+      the reverser, o3h
+    - added vmethods for ARRAY containers: all,
+      push, pop, unshift, shift, scalar
+    - updated POD, added tests for all new things
+    - specified minimum version of Perl as 5.10
+      in dist.ini and all meta data that follows
+
+0.1.1 Mon Dec 19 15:00:00 2022
+    - POD updates
+
+0.1.2 Mon Dec 20 15:00:00 2022
+    - POD updates
+
+0.2.0 Thu Dec 22 15:00:01 2022
+    - found and fixed bug:
+      o3h was not working on ARRAYs
+    - updated POD, added method C<a2o> intended
+      for internal use; but some might find it
+      useful
+
+0.2.1 Fri Dec 23 15:00:02 2022
+    - renamed h3o, o3h to d2o, o2d
+
+0.2.2 Tue Dec 28 15:00:03 2022
+    - added helper methods for use with configuration
+      files: ini2o, o2ini, o2h2o
+    - added a dependency of Config::Tiny for ini2o and
+      o2ini
