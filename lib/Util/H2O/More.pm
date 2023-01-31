@@ -59,7 +59,7 @@ sub baptise ($$@) {
 # preconditioner for use with Getopt::Long flags; returns just the flag name given
 # a list of option descriptors, e.g., qw/option1=s option2=i option3/;
 
-# Getopts to keys
+# Getopt to keys
 sub opt2h2o(@) {
     my @getopt_def = @_;
     my @flags_only = map { m/([^=|\s]+)/g; $1 } @getopt_def;
@@ -352,7 +352,7 @@ C<baptise> and C<bastise -recurse>.
 =head2 C<Getopt2h2o REF, REF, LIST>
 
 Wrapper around the idiom enabled buy C<opt2h2o>. It even will C<require>
-C<Getopts::Long>. Usage:
+C<Getopt::Long>. Usage:
 
   use Util::H2O::More qw/Getopt2h2o/;
   my $opts_ref = Getopt2h2o \@ARGV, { n => 10 }, qw/f=s n=i/;
