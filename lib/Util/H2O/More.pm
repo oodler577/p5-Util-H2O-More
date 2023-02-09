@@ -271,6 +271,24 @@ very useful for dealing with modern services that return C<ARRAY>s
 of C<HASH>, traditional L<DBI> queries, and other modules that can
 provide C<LIST>s of C<HASH> refs,  such as L<Web::Scraper>.
 
+C<d2o> and C<o2d> would not have been added if the author of this
+module had been keeping up with the latest features of C<Util::H2O>.
+If nested data structure support is what you need, please see if
+C<h2o>'s C<-array> is what you want; it tells C<h2o> to descende into
+C<ARRAY>s and applies C<h2o -recurse> to them if found; this is
+extremely useful for dealing with data structures generated from
+deserializing JSON (e.g.,).
+
+This module provides some other compelling methods, such as those
+implementing the I<cookbook> suggestions described in C<Util::H2O>.
+Which make it easier to deal with modules such as L<Config::Tiny>
+(C<ini2h2o>, C<h2o2ini>), handle non-compliant keys C<tr4h2o>, or 
+even provide convient access to C<Data::Dumper> (via C<ddd>).
+
+You may have come here for the C<baptise>, but stay for the other
+stuff -all built with the purpose of showing people I<the way> to
+cleaning up their Perl with C<Util::H2O>!
+
 =head1 SYNOPSIS 
 
 It is easy to create an I<OOP> module using C<baptise> instead of
