@@ -4,9 +4,9 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.2.8};
+our $VERSION = q{0.2.9};
 
-our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o h2o2ini Getopt2h2o/);
+our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o h2o2ini Getopt2h2o ddd dddie/);
 
 use Util::H2O ();
 
@@ -203,6 +203,23 @@ sub o2d($) {
         $thing = Util::H2O::o2h $thing;
     }
     return Util::H2O::o2h $thing;
+}
+
+# handy, poor man's debug wrappers
+
+sub ddd(@) {
+    require Data::Dumper;
+    foreach my $ref (@_) {
+        print STDERR Data::Dumper::Dumper($ref);
+    }
+}
+
+sub dddie(@) {
+    require Data::Dumper;
+    foreach my $ref (@_) {
+        print STDERR Data::Dumper::Dumper($ref);
+    }
+    die qq{died due to use of dddie};
 }
 
 1;
@@ -630,6 +647,20 @@ convenient that doing,
 
   my $count = scalar @{$root->some->barray->all}; 
 
+=head2 Debugging Methods
+
+=head3 C<ddd LIST>
+
+Takes a list and applies L<Data::Dumper>'s C<::Dumper> method to them, in turn. Prints to
+C<STDERR>.
+
+Used for debugging data structures, which is a likely thing to need if using this module.
+
+L<Data::Dumper> is C<require>'d by this method.
+
+=head3 C<dddie LIST>
+
+Does the same thing as C<ddd>, but C<die>s at the end.
 
 =head1 EXTERNAL METHODS
 
