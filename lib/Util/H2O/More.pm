@@ -6,7 +6,7 @@ use parent q/Exporter/;
 
 our $VERSION = q{0.2.9};
 
-our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o h2o2ini Getopt2h2o ddd dddie/);
+our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o h2o2ini Getopt2h2o ddd dddie tr2h2o/);
 
 use Util::H2O ();
 
@@ -54,6 +54,25 @@ sub baptise ($$@) {
     }
 
     return $self;
+}
+
+# make keys legal for use as accessor, provides original keys via "__og_keys" accessor
+sub tr2h2o($) {
+    my $hash_ref    = shift;
+    my $new_hashref = {};
+
+    # List::Util::pairmap was not happy being require'd for some reason
+    # so iterate and replace keys explicitly; store original key in resulting
+    # hashref via __og_keys
+    foreach my $og_k ( keys %$hash_ref ) {
+        my $k = $og_k;
+        $k =~ tr/a-zA-Z0-9/_/c;
+        $new_hashref->{$k} = $hash_ref->{$og_k};
+
+        # save old key via __og_keys
+        $new_hashref->{__og_keys}->{$k} = $og_k;
+    }
+    return $new_hashref;
 }
 
 # preconditioner for use with Getopt::Long flags; returns just the flag name given
