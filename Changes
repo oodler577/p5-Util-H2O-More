@@ -110,3 +110,10 @@
     - dddie LIST - same as ddd, but die's at the end of the LIST
     - POD updated to reflect these helpers
     - manually tested, no unit tests added for this
+
+0.3.0 Thu Feb 09 15:00:57 2023
+    - added tr4h2o for keys not appropriate for use as subroutine names/accessors
+    - added backward compat wrappers, ini2o (ini2h2o) and o2ini (h2o2ini) due to
+      unforseen impacts to users (who knew!?) of taking them away
+    - added tests, POD
+    - POD issues if found will usually just be addressed in the next release
