@@ -4,9 +4,9 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.3.0};
+our $VERSION = q{0.3.1};
 
-our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o ini2o h2o2ini o2ini Getopt2h2o ddd dddie tr4h2o/);
+our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o ini2o h2o2ini o2ini Getopt2h2o ddd dddie tr4h2o yaml2o/);
 
 use Util::H2O ();
 
@@ -126,6 +126,35 @@ sub h2o2ini($$) {
 sub o2ini($$) {
     return h2o2ini( shift, shift );
 }
+
+# YAML configuration support - may return more than 1 reference
+sub yaml2o($) {
+    require YAML;
+    my $file_or_yaml = shift; # may be a file or a string
+    my @yaml         = ();    # yaml can have multiple objects serialized, via ---
+
+    # if a file, use YAML::LoadFile
+    if ( -e $file_or_yaml ) {
+        @yaml = YAML::LoadFile($file_or_yaml);
+    }
+
+    # if not a file, assume YAML string and use YAML::Load
+    else {
+        @yaml = YAML::Load($file_or_yaml);
+    }
+
+    # iterate over 1 or more serialized objects that were deserialized
+    # from the YAML, applie C<d2o> to it due to the potential presence
+    # of ARRAY references
+    my @obs = ();
+    foreach my $y (@yaml) {
+        push @obs, d2o $y;
+    }
+
+    return @obs;
+}
+
+# no o2yaml, but can add one if somebody needs it ... please file an issue on the tracker (GH these days)
 
 # return a dereferences hash (non-recursive); reverse of `h2o'
 sub o2h($) {
@@ -499,6 +528,59 @@ C<baptise> and friends.
     # ...
     # now $o can be used to query all possible options, even if they were
     # never passed at the commandline 
+
+=head C<yaml2o FILENAME_OR_YAML_STRING>
+
+Takes a single parameter that may be the name of a YAML file (in which case
+it uses L<YAML>'s C<LoadFile>) or as a string of YAML (in which case it uses
+L<YAML>'s C<Load> to parse it). If either C<YAML::LoadFile> or C<YAML::Load>
+fails and throws an exception, it will not be caught and propagate to the
+caller of C<yaml2o>.
+
+Note: C<YAML> may contain more than one serialized object (separated by a
+line with C<---\n>. Therefore C<yaml2o> should be treated as returning a
+list of C<d2o>'d objects.
+
+For example, say the YAML file looks like the following, saved as C<myfile.yaml>:
+
+  ---
+  database:
+    host:     localhost 
+    port:     3306
+    db:       users 
+    username: appuser 
+    password: 1uggagel2345 
+  ---
+  devices:
+    copter1:
+      active:  1
+      macaddr: a0:ff:6b:14:19:6e
+      host:    192.168.0.14
+      port:    80
+    thingywhirl:
+      active:  1
+      macaddr: 00:88:fb:1a:5f:08
+      host:    192.168.0.14
+      port:    80
+
+Then the one may use the C<yaml2o> as follows:
+
+  my @objects_from_yaml = yaml2o q{/path/to/myfile.yaml>;
+
+And C<@objects_from_yaml> will have 2 objects in it, but having been C<bless>ed
+with accessors via the C<d2o> command, which will detect and handle properly lists.
+
+If known ahead of time how many serialized objects C<myfile.yaml> would have
+contained, then this is also a useful way to call it:
+
+  my ($dbconfig, $devices) = yaml2o q{/path/to/myfile.yaml};
+
+More exotic C<YAML> files may break C<yaml2o>; this method was added to support
+simple C<YAML>. YAML can be used to encode a lot of things that we do not need.
+
+If you just need, e.g., the C<$dbconfig>; then this trick would apply well also:
+
+  my ($dbconfig, undef) = yaml2o q{/path/to/myfile.yaml};
 
 =head2 C<ini2h2o FILENAME>
 
