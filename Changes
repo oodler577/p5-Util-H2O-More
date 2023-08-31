@@ -123,3 +123,5 @@
     - yaml2o is like ini2o, but used with YAML files and YAML saved directly
       as a string to a SCALAR variable 
       
+0.3.2 Wed Aug 30 01:05:00 2023
+    - POD update 

@@ -4,7 +4,7 @@ use warnings;
 package Util::H2O::More;
 use parent q/Exporter/;
 
-our $VERSION = q{0.3.1};
+our $VERSION = q{0.3.2};
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o ini2o h2o2ini o2ini Getopt2h2o ddd dddie tr4h2o yaml2o/);
 
@@ -294,12 +294,14 @@ __END__
 
 =head1 NAME
 
-Util::H2O::More - provides C<baptise>, a drop-in replacement for
-C<bless>; like if C<bless> created accessors for you. This module
-also provides additional methods built using C<h2o> or C<o2h> from
-L<Util::H2O> that allow for the incremental addition of I<OOP> into
-existing or small scale Perl code without having to fully commit
-to a Perl I<OOP> framework or compromise one's personal Perl style.
+Util::H2O::More - Provides C<baptise>, a drop-in replacement C<bless>
+that creates accessors for you.
+
+This module also provides additional methods built using C<h2o>
+or C<o2h> from L<Util::H2O> that allow for the incremental addition
+of I<OOP> into existing or small scale Perl code without having to
+fully commit to a Perl I<OOP> framework or compromise one's personal
+Perl style.
 
 C<Util::H2O::More> now provides a wrapper method now, C<d2o>
 that will find and I<objectify> all C<HASH> refs contained in
@@ -537,7 +539,7 @@ C<baptise> and friends.
     # now $o can be used to query all possible options, even if they were
     # never passed at the commandline 
 
-=head C<yaml2o FILENAME_OR_YAML_STRING>
+=head2 C<yaml2o FILENAME_OR_YAML_STRING>
 
 Takes a single parameter that may be the name of a YAML file (in which case
 it uses L<YAML>'s C<LoadFile>) or as a string of YAML (in which case it uses
@@ -590,12 +592,46 @@ If you just need, e.g., the C<$dbconfig>; then this trick would apply well also:
 
   my ($dbconfig, undef) = yaml2o q{/path/to/myfile.yaml};
 
+Similarly, the following works as expected. The only different is that C<$YAML>
+contains a string.
+
+  my $YAML =<< EOYAML;
+  ---
+  database:
+    host:     localhost 
+    port:     3306
+    db:       users 
+    username: appuser 
+    password: 1uggagel2345 
+  ---
+  devices:
+    copter1:
+      active:  1
+      macaddr: a0:ff:6b:14:19:6e
+      host:    192.168.0.14
+      port:    80
+    thingywhirl:
+      active:  1
+      macaddr: 00:88:fb:1a:5f:08
+      host:    192.168.0.14
+      port:    80
+  EOYAML
+  
+  my ($dbconfig, $devices) = yaml2o $YAML;
+
+=head3 C<yaml2o> May C<die>!
+
 If whatever is passed to C<yaml2o> looks like neither a block of YAML or a file
 name, an exception will be thrown with an error saying as much.
 
-Note: There is no C<o2yaml> that serializes an object to a file. One may be provided
+=head3 Note on Serialization to YAML
+
+There is no C<o2yaml> that serializes an object to a file. One may be provided
 at a later date. If you're reading this and want it, please create an issue at
 the Github repository to request it (or other things).
+
+See also, C<o2h>, which returns the pure underlying Perl data structure that is
+objectified by C<h2o>, C<baptise>, C<ini2o>, C<yaml2o>, C<d2o>, etc.
 
 =head2 C<ini2h2o FILENAME>
 
