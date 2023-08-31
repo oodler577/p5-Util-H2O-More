@@ -127,35 +127,6 @@ sub o2ini($$) {
     return h2o2ini( shift, shift );
 }
 
-# YAML configuration support - may return more than 1 reference
-sub yaml2o($) {
-    require YAML;
-    my $file_or_yaml = shift; # may be a file or a string
-    my @yaml         = ();    # yaml can have multiple objects serialized, via ---
-
-    # if a file, use YAML::LoadFile
-    if ( -e $file_or_yaml ) {
-        @yaml = YAML::LoadFile($file_or_yaml);
-    }
-
-    # if not a file, assume YAML string and use YAML::Load
-    else {
-        @yaml = YAML::Load($file_or_yaml);
-    }
-
-    # iterate over 1 or more serialized objects that were deserialized
-    # from the YAML, applie C<d2o> to it due to the potential presence
-    # of ARRAY references
-    my @obs = ();
-    foreach my $y (@yaml) {
-        push @obs, d2o $y;
-    }
-
-    return @obs;
-}
-
-# no o2yaml, but can add one if somebody needs it ... please file an issue on the tracker (GH these days)
-
 # return a dereferences hash (non-recursive); reverse of `h2o'
 sub o2h($) {
     $Util::H2O::_PACKAGE_REGEX = qr/::_[0-9A-Fa-f]+\z/;    # makes internal package name more generic for baptise created references
@@ -279,6 +250,43 @@ sub dddie(@) {
     }
     die qq{died due to use of dddie};
 }
+
+# YAML configuration support - may return more than 1 reference
+sub yaml2o($) {
+    require YAML;
+    my $file_or_yaml = shift; # may be a file or a string
+    my @yaml         = ();    # yaml can have multiple objects serialized, via ---
+
+    # determine if YAML or file name
+    my @lines = split /\n/, $file_or_yaml;
+
+    # if a file, use YAML::LoadFile
+    if ( @lines == 1 and -e $file_or_yaml ) {
+        @yaml = YAML::LoadFile($file_or_yaml);
+    }
+
+    # if not a file, assume YAML string and use YAML::Load
+    elsif ($lines[0] eq q{---}) {
+        @yaml = YAML::Load($file_or_yaml);
+    }
+
+    # die because not supported content $file_or_yaml - it is neither
+    else {
+        die qq{Provided parameter looks like neither a file name nor a valid YAML snippet.\n};
+    }
+
+    # iterate over 1 or more serialized objects that were deserialized
+    # from the YAML, applie C<d2o> to it due to the potential presence
+    # of ARRAY references
+    my @obs = ();
+    foreach my $y (@yaml) {
+        push @obs, d2o $y;
+    }
+
+    return @obs;
+}
+
+# NOTE: no o2yaml, but can add one if somebody needs it ... please file an issue on the tracker (GH these days)
 
 1;
 
@@ -581,6 +589,13 @@ simple C<YAML>. YAML can be used to encode a lot of things that we do not need.
 If you just need, e.g., the C<$dbconfig>; then this trick would apply well also:
 
   my ($dbconfig, undef) = yaml2o q{/path/to/myfile.yaml};
+
+If whatever is passed to C<yaml2o> looks like neither a block of YAML or a file
+name, an exception will be thrown with an error saying as much.
+
+Note: There is no C<o2yaml> that serializes an object to a file. One may be provided
+at a later date. If you're reading this and want it, please create an issue at
+the Github repository to request it (or other things).
 
 =head2 C<ini2h2o FILENAME>
 
