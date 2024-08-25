@@ -130,31 +130,62 @@ sub o2h($) {
     $Util::H2O::_PACKAGE_REGEX = qr/::_[0-9A-Fa-f]+\z/;    # makes internal package name more generic for baptise created references
     my $ref = Util::H2O::o2h @_;
     if ( ref $ref ne q{HASH} ) {
-        die qq{Could not fully remove top-level reference. Probably an issue with \$Util::H2O_PACKAGE_REGEX\n};
+        die qq{o2h: Could not fully remove top-level reference. Probably an issue with \$Util::H2O_PACKAGE_REGEX\n};
     }
     return $ref;
 }
 
-sub d2o($);    # forward declaration to get rid of "too early" warning
+sub d2o(@);    # forward declaration to get rid of "too early" warning
 sub a2o($);
 
-sub d2o($) {
-    my $thing = shift;
+sub d2o(@) {
+    my $autoundef_or_thing = shift; # looking for a leading flag, here '-autoundef'
+
+    # looking for "-autoundef"
+    my ($autoundef, $thing);
+    if (defined $autoundef_or_thing and ref $autoundef_or_thing eq q{HASH}) {
+      $thing = $autoundef_or_thing;
+    }
+    elsif ($autoundef_or_thing eq q{-autoundef}) {
+      $autoundef  = $autoundef_or_thing;
+      $thing = shift;
+    }
+
     my $isa   = ref $thing;
+
     if ( $isa eq q{ARRAY} ) {
         a2o $thing;
         foreach my $element (@$thing) {
+          if ($autoundef) { # 'd2o -autoundef, $hash'
+            d2o $autoundef, $element;
+          }
+          else {
             d2o $element;
+          }
         }
     }
     elsif ( $isa eq q{HASH} ) {
         foreach my $keys ( keys %$thing ) {
-            d2o( $thing->{$keys} );
+          if ($autoundef) { # 'd2o -autoundef, $hash'
+            d2o $autoundef, $thing->{$keys};
+          }
+          else {
+            d2o $thing->{$keys};
+          }
         }
-
-        # package level wrapper, so this can be monkey patched
-        # if so desired, per documentation
-        h2o $thing;
+        if ($autoundef) { # 'd2o -autoundef, $hash'
+          $thing->{AUTOLOAD} = sub {
+            my $self = shift;
+            our $AUTOLOAD;
+            ( my $key = $AUTOLOAD ) =~ s/.*:://;
+            die qq{d2o: Won't set value for non-existing key. Need it? Let the module author know!\n} if @_;
+            return undef;
+          };
+          h2o -meth, $thing;
+        }
+        else {           # default behavior
+          h2o $thing;
+        }
     }
     return $thing;
 }
