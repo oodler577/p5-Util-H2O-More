@@ -6,7 +6,7 @@ use parent q/Exporter/;
 use Util::H2O ();
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o ini2o h2o2ini o2ini Getopt2h2o ddd dddie tr4h2o yaml2h2o yaml2o/);
-our $VERSION = q{0.3.4};
+our $VERSION = q{0.3.5};
 
 use feature 'state';
 
@@ -138,18 +138,16 @@ sub o2h($) {
 sub d2o(@);    # forward declaration to get rid of "too early" warning
 sub a2o($);
 
+# accepts '-autoundef' flag that will insert all keys/getters to be checked
+# i.e., if (not $myref->doesntexist) { ... } rather than if (not exists $myref->{doesntexist}) { ... }
 sub d2o(@) {
-    my $autoundef_or_thing = shift; # looking for a leading flag, here '-autoundef'
-
-    # looking for "-autoundef"
-    my ($autoundef, $thing);
-    if (defined $autoundef_or_thing and ref $autoundef_or_thing eq q{HASH}) {
-      $thing = $autoundef_or_thing;
+    my ($autoundef);
+    # basically how Util::H2O::h2o does it, if we have more options
+    # then we should use the `while` form of this ...
+    if ( @_ && $_[0] && !ref$_[0] && $_[0]=~/^-autoundef/ ) {
+      $autoundef = shift;
     }
-    elsif ($autoundef_or_thing eq q{-autoundef}) {
-      $autoundef  = $autoundef_or_thing;
-      $thing = shift;
-    }
+    my $thing = shift;
 
     my $isa   = ref $thing;
 
@@ -160,7 +158,7 @@ sub d2o(@) {
             d2o $autoundef, $element;
           }
           else {
-            d2o $element;
+            d2o $element; 
           }
         }
     }
@@ -331,43 +329,7 @@ __END__
 Util::H2O::More - Provides C<baptise>, a drop-in replacement C<bless>
 that creates accessors for you.
 
-This module also provides additional methods built using C<h2o>
-or C<o2h> from L<Util::H2O> that allow for the incremental addition
-of I<OOP> into existing or small scale Perl code without having to
-fully commit to a Perl I<OOP> framework or compromise one's personal
-Perl style.
-
-C<Util::H2O::More> now provides a wrapper method now, C<d2o>
-that will find and I<objectify> all C<HASH> refs contained in
-C<ARRAY>s at any level, no matter how deep. This ability is
-very useful for dealing with modern services that return C<ARRAY>s
-of C<HASH>, traditional L<DBI> queries, and other modules that can
-provide C<LIST>s of C<HASH> refs,  such as L<Web::Scraper>.
-
-C<d2o> and C<o2d> would not have been added if the author of this
-module had been keeping up with the latest features of C<Util::H2O>.
-If nested data structure support is what you need, please see if
-C<h2o>'s C<-array> is what you want; it tells C<h2o> to descende into
-C<ARRAY>s and applies C<h2o -recurse> to them if found; this is
-extremely useful for dealing with data structures generated from
-deserializing JSON (e.g.,).
-
-This module provides some other compelling methods, such as those
-implementing the I<cookbook> suggestions described in C<Util::H2O>.
-Which make it easier to deal with modules such as L<Config::Tiny>
-(C<ini2h2o>, C<h2o2ini>), handle non-compliant keys C<tr4h2o>, or 
-even provide convient access to C<Data::Dumper> (via C<ddd>).
-
-You may have come here for the C<baptise>, but stay for the other
-stuff -all built with the purpose of showing people I<the way> to
-cleaning up their Perl with C<Util::H2O>!
-
 =head1 SYNOPSIS 
-
-It is easy to create an I<OOP> module using C<baptise> instead of
-C<bless>, which means it includes accessors (thanks to C<Util::H2O::h2o>).
-In most cases, C<baptise> can be used as a drop-in replacement for
-C<bless>.
 
 Below is an example of a traditional Perl OOP class constructor
 using C<baptise> to define a set of default accessors, in addition
@@ -417,6 +379,11 @@ Then on a caller script,
     # and from the supplied tuple,
     #   $foo->else
 
+It is easy to create an I<OOP> module using C<baptise> instead of
+C<bless>, which means it includes accessors (thanks to C<Util::H2O::h2o>).
+In most cases, C<baptise> can be used as a drop-in replacement for
+C<bless>.
+
 For more examples, please look at the classes created for the unit
 tests contained in C<t/lib>.
 
@@ -464,6 +431,38 @@ Finally, and what started this module; the usage pattern of C<h2o>
 begs it to be able to support being used as a I<drop in> replacement
 for C<bless>.  But is does a fine job as serving
 as the I<basis> for a I<better bless>.
+
+This module also provides additional methods built using C<h2o>
+or C<o2h> from L<Util::H2O> that allow for the incremental addition
+of I<OOP> into existing or small scale Perl code without having to
+fully commit to a Perl I<OOP> framework or compromise one's personal
+Perl style.
+
+C<Util::H2O::More> now provides a wrapper method now, C<d2o>
+that will find and I<objectify> all C<HASH> refs contained in
+C<ARRAY>s at any level, no matter how deep. This ability is
+very useful for dealing with modern services that return C<ARRAY>s
+of C<HASH>, traditional L<DBI> queries, and other modules that can
+provide C<LIST>s of C<HASH> refs,  such as L<Web::Scraper>.
+
+C<d2o> and C<o2d> would not have been added if the author of this
+module had been keeping up with the latest features of C<Util::H2O>.
+If nested data structure support is what you need, please see if
+C<h2o>'s C<-array> is what you want; it tells C<h2o> to descende into
+C<ARRAY>s and applies C<h2o -recurse> to them if found; this is
+extremely useful for dealing with data structures generated from
+deserializing JSON (e.g.,).
+
+This module provides some other compelling methods, such as those
+implementing the I<cookbook> suggestions described in C<Util::H2O>.
+Which make it easier to deal with modules such as L<Config::Tiny>
+(C<ini2h2o>, C<h2o2ini>), handle non-compliant keys C<tr4h2o>, or 
+even provide convient access to C<Data::Dumper> (via C<ddd>).
+
+You may have come here for the C<baptise>, but stay for the other
+stuff -all built with the purpose of showing people I<the way> to
+cleaning up their Perl with C<Util::H2O>!
+
 
 =head1 METHODS
 
@@ -750,9 +749,14 @@ a blessed reference would cause the underlying serialization routines
 to warn or C<die> without using C<o2h> to return a pure C<HASH>
 reference.
 
-=head2 C<d2o REF>
+=head2 C<d2o [-autoundef] REF>
 
-This method is basically a wrapper around C<h2o> that will traverse
+The optional flag C<-autoundef> will attach an C<AUTOLOAD> method to
+each individual HASH reference object that wwill allow uninitialized
+hash keys to be called as a method, and it will automatically return
+C<undef>. See the L<-autoundef> section for more.
+
+This method is essentially a wrapper around C<h2o> that will traverse
 an arbitrarily complex Perl data structure, applying C<h2o> to any
 C<HASH> references along the way.
 
@@ -826,6 +830,30 @@ the form:
   ]
 
   (* froms, https://jsonplaceholder.typicode.com/users)
+
+=head3 C<-autoundef>
+
+There is an optional flag for C<d2o> that will allow one to one to call a
+non-existing key using its setter form, and via C<AUTOLOAD> will return
+C<undef>, this saves some code and piercing the veil into the HASH itself;
+
+For example, before, it is necessary to pierce the veil of the HASH ref:
+
+  my $hash_ref = somecall(..);
+  d2o $hash_ref;
+  my @mightexist = qw/foo bar baz/;
+  foreach my $k (@mightexist) {
+    say $hash_ref->$k if (exists $hash_ref->{$k}); #...before
+  } 
+
+After, missing methods return undef:
+
+  my $hash_ref = somecall(..);
+  d2o -autoundef, $hash_ref;
+  my @mightexist = qw/foo bar baz/;
+  foreach my $k (@mightexist) {
+    say $hash_ref->$k if ($hash_ref->$k); #............after 
+  } 
 
 =head3 C<h2o>'s C<-array> Modifier
 
@@ -954,7 +982,8 @@ itself.
 
 =head1 BUGS
 
-No. I mean maybe. Buyer beware.
+At the time of this release, there are no bugs on the Github issue
+tracker.
 
 =head1 LICENSE AND COPYRIGHT 
 
@@ -964,6 +993,11 @@ Perl/perl
 
 Thank you to HAUKEX for creating L<Util::H2O> and hearing me out
 on its usefulness for some unintended use cases.
+
+=head1 SEE ALSO
+
+This module was featured in the 2023 Perl Advent Calendar on December 22,
+L<https://perladvent.org/2023/2023-12-22.html>.
 
 =head1 AUTHOR
 

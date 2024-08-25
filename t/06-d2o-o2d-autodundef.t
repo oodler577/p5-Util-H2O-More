@@ -1,8 +1,8 @@
+# basically how Util::H2O::h2o does it
 use strict;
 use warnings;
 
 use Test::More q//;
-use Test::Exception q//;
 use Util::H2O::More qw/h2o o2h d2o o2d/;
 
 # for included module required for testing
@@ -72,7 +72,7 @@ $HoA2 = o2d $HoA2;
 is_deeply $HoA1, $HoA2, q{HASH refs purified by o2h and o2d are identical};
 
 h2o $HoA1;
-d2o $HoA2;
+d2o -autoundef, $HoA2;
 
 is_deeply $HoA1, $HoA2, q{h2o object is identical to d2o object};
 
@@ -99,7 +99,7 @@ my $HoAoH = {
     },
 };
 
-d2o $HoAoH;
+d2o -autoundef, $HoAoH;
 
 is $HoAoH->one->[0],                       1,  q{ARRAY ref by index found via accessor};
 is $HoAoH->ten->twentyone->[0]->twentytwo, 22, q{accessor deeply contained inside of ARRAY found};
@@ -205,7 +205,7 @@ my $mixed2 = [
     undef,
 ];
 
-d2o $mixed1;
+d2o -autoundef, $mixed1;
 
 is ref $mixed1->[3], ref $mixed2->[3], q{CODE refs have been preserved and are unaffected};
 
@@ -219,7 +219,7 @@ is_deeply $mixed1, $mixed2, q{Mixed array, including undef and CODE ref treated 
 # testing o2d some more
 $foo = [ qw/1 2 3 4 5/, [qw/ 6 7 8 9 /], { foo => 1, code => sub { 1 } }, sub { 2 }, ];
 
-d2o $foo;
+d2o -autoundef, $foo;
 
 like ref $foo, qr/Util::H2O::More::__a2o/, q{setting up for testing o2d};
 
@@ -232,7 +232,7 @@ is ref $foo2, q{ARRAY}, q{making sure o2d worked on an ARRAY blessed by d2o};
 # testing o2d some more - regression test for Util::H2O's upstream bug #20
 $foo = [ qw/-1 2 -3 4 -5/, [qw/ 6 7 8 9 /], { foo => -1, code => sub { 1 } }, sub { 2 }, ];
 
-d2o $foo;
+d2o -autoundef, $foo;
 
 like ref $foo, qr/Util::H2O::More::__a2o/, q{setting up for testing o2d};
 
@@ -242,8 +242,8 @@ like ref $foo, qr/Util::H2O::More::__a2o/, q{making sure o2d doesn't effect REF,
 
 is ref $foo2, q{ARRAY}, q{making sure o2d worked on an ARRAY blessed by d2o};
 
-dies_ok { $HoAoH->doesntexist } q{call to non-existing setter dies without '-autoundef'};
+is $HoAoH->doesntexist, undef, q{call to non-existing setter returns undef, perl '-autoundef'};
 
-dies_ok { $HoAoH->ten->doesntexist } q{call to non-existing setter dies without '-autoundef'};
+is $HoAoH->ten->doesntexist, undef, q{call to non-existing setter returns undef, perl '-autoundef'};
 
 done_testing;
