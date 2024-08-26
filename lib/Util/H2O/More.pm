@@ -6,7 +6,7 @@ use parent q/Exporter/;
 use Util::H2O ();
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o ini2o h2o2ini o2ini Getopt2h2o ddd dddie tr4h2o yaml2h2o yaml2o/);
-our $VERSION = q{0.3.6};
+our $VERSION = q{0.3.7};
 
 use feature 'state';
 
@@ -211,8 +211,8 @@ sub a2o($) {
     *{"${a2o_pkg}::get"} = $GET;
 
     # return item at index INDEX - short version (i() is a mnemonic for 'index')
-    my $GET = sub { my ( $self, $i ) = @_; return $self->[$i]; };
-    *{"${a2o_pkg}::i"} = $GET;
+    my $i = sub { my ( $self, $i ) = @_; return $self->[$i]; };
+    *{"${a2o_pkg}::i"} = $i;
 
     # return rereferenced ARRAY
     my $ALL = sub { my $self = shift; return @$self; };
@@ -330,8 +330,9 @@ __END__
 
 =head1 NAME
 
-Util::H2O::More - Provides C<baptise>, like C<bless> but creates accessors for you.
-It does other cool things to make Perl code easier to read and maintain, too.
+Util::H2O::More - Provides C<baptise>, semantically and idiomatically
+just like C<bless> but creates accessors for you.  It does other cool
+things to make Perl code easier to read and maintain, too.
 
 =head1 SYNOPSIS 
 

@@ -169,3 +169,13 @@
           of deeply nested hashs and arrays as an example of the potential
           for cleaning up old code with lots of HASH and ARRAY refs
           very easily
+
+0.3.7 Sun Aug 26 01:05:00 2024
+        - cleaned up some POD
+        - added an alias "i" that does the same thing as "get" for
+          the virtual methods associated with the ARRAY accessors
+        - added before and after examples for some pathological uses
+          of deeply nested hashs and arrays as an example of the potential
+          for cleaning up old code with lots of HASH and ARRAY refs
+          very easily
+        - fixed test warnings
