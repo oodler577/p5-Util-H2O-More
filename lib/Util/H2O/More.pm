@@ -838,7 +838,7 @@ the form:
 
 =head3 C<-autoundef>
 
-There is an optional flag for C<d2o> that will allow one to one to call a
+There is an optional flag for C<d2o> that will allow one to call a
 non-existing key using its setter form, and via C<AUTOLOAD> will return
 C<undef>, this saves some code and piercing the veil into the HASH itself;
 
