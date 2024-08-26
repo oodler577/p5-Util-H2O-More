@@ -471,7 +471,7 @@ cleaning up their Perl with C<Util::H2O>!
 
 =head1 METHODS
 
-=head2 C<baptise REF, PKG, LIST>
+=head2 C<baptise [-recurse] REF, PKG, LIST>
 
 Takes the same first 2 parameters as C<bless>; with the addition
 of a list that defines a set of default accessors that do not
@@ -480,7 +480,9 @@ rely on the top level keys of the provided hash reference.
 The B<-recurse> option:
 
 Like C<baptise>, but creates accessors recursively for a nested
-hash reference. Uses C<h2o>'s C<-recurse> flag.
+hash reference. Uses C<h2o>'s C<-recurse> flag. I know it's weird
+having a I<-recurse> option for a method called, I<baptise>. I
+don't make the rule :-).
 
 Note: The accessors created in the nested hashes are handled
 directly by C<h2o> by utilizing the C<-recurse> flag. This means
