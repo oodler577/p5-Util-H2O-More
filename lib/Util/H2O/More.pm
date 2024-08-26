@@ -6,7 +6,7 @@ use parent q/Exporter/;
 use Util::H2O ();
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o ini2o h2o2ini o2ini Getopt2h2o ddd dddie tr4h2o yaml2h2o yaml2o/);
-our $VERSION = q{0.3.5};
+our $VERSION = q{0.3.6};
 
 use feature 'state';
 
@@ -210,6 +210,10 @@ sub a2o($) {
     my $GET = sub { my ( $self, $i ) = @_; return $self->[$i]; };
     *{"${a2o_pkg}::get"} = $GET;
 
+    # return item at index INDEX - short version (i() is a mnemonic for 'index')
+    my $GET = sub { my ( $self, $i ) = @_; return $self->[$i]; };
+    *{"${a2o_pkg}::i"} = $GET;
+
     # return rereferenced ARRAY
     my $ALL = sub { my $self = shift; return @$self; };
     *{"${a2o_pkg}::all"} = $ALL;
@@ -326,8 +330,8 @@ __END__
 
 =head1 NAME
 
-Util::H2O::More - Provides C<baptise>, a drop-in replacement C<bless>
-that creates accessors for you.
+Util::H2O::More - Provides C<baptise>, like C<bless> but creates accessors for you.
+It does other cool things to make Perl code easier to read and maintain, too.
 
 =head1 SYNOPSIS 
 
@@ -902,10 +906,19 @@ Returns a LIST of all items in the C<ARRAY> container.
  
   my @items = $root->some-barray->all;
 
-=head3 C<get INDEX>
+=head3 C<get INDEX>, C<i INDEX>
 
 Given an C<ARRAY> container from C<d2o>, returns the element at the given
 index. See C<push> example below for a practical example.
+
+For shorter code, one may use C<i> instead of C<get>, for example, something
+really pathalogical can be written either:
+
+  $data->company->teams->get(0)->members->get(0)->projects->get(0)->tasks->get(1)->status('Completed');
+
+Or,
+
+  $data->company->teams->i(0)->members->i(0)->projects->i(0)->tasks->i(1)->status('Completed');
 
 =head3 C<push LIST>
 
