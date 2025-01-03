@@ -203,3 +203,8 @@
         - see updated POD for HTTPTiny2h2o for more details
 	- HTTPTiny2h2o this method is still evolving, feedback is
 	  welcomed for different scenario
+
+0.4.2 Tue Jan 03 03:27:00 2025
+	- added POD about opt2h2o's support for Getopt::Long's ability
+	  to define negative options; e.g., "option6!" is able to
+	  accept "--option6" and "--no-option6".

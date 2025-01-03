@@ -6,7 +6,7 @@ use parent q/Exporter/;
 use Util::H2O ();
 
 our @EXPORT_OK = (qw/baptise opt2h2o h2o o2h d2o o2d o2h2o ini2h2o ini2o h2o2ini HTTPTiny2h2o o2ini Getopt2h2o ddd dddie tr4h2o yaml2h2o yaml2o/);
-our $VERSION = q{0.4.1};
+our $VERSION = q{0.4.2};
 
 use feature 'state';
 
@@ -617,11 +617,22 @@ can be tested without first inspecting the HASH ref itself; this helps avoid
 
   use Util::H2O::More qw/Getopt2h2o/;
   my $opts_ref = Getopt2h2o -autoundef, \@ARGV, { n => 10 }, qw/f=s n=i/;
-
+  
   foreach my $opt (qw/n i OptionThatDoesntExist) {
     if (not $opts_ref->$opt) {
       ... # handle if something was not set and was not already accounted for
     }
+  }
+
+Negtive option syntax of L<Getopt::Long> are also supported as of version
+0.4.1;for example, the following will process the commandline flags,
+C<--verbose> and also C<--no-verbose>.
+
+  use Util::H2O::More qw/Getopt2h2o/;
+  my $opts_ref = Getopt2h2o -autoundef, \@ARGV, { n => 10, verbose => 1 }, qw/f=s n=i verbose!/;
+  
+  unless ($o->verbose) {
+    ...
   }
 
 This methods was originally created because even C<opt2h2o> didn't eliminate
@@ -634,7 +645,7 @@ meant for C<Getopt::Long>; and extracts the flag names so that they may be
 used to create default accessors without having more than one list. E.g.,
 
     use Getopt::Long qw//;
-    my @opts = (qw/option1=s options2=s@ option3 option4=i o5|option5=s/);
+    my @opts = (qw/option1=s options2=s@ option3 option4=i o5|option5=s option6!/);
     my $o = h2o {}, opt2h2o(@opts);
     Getopt::Long::GetOptionsFromArray( \@ARGV, $o, @opts ); # Note, @ARGV is passed by reference
 
@@ -642,6 +653,9 @@ used to create default accessors without having more than one list. E.g.,
     if ($o->option3) {
       do_the_thing();
     }
+
+As of version 0.4.1, negative options are handled properly. E.g., in the above
+examples, C<option6!> will accept both C<--option6> and C<--no-option6>.
 
 Note: default values for options may still be placed inside of the anonymous
 hash being I<objectified> via C<h2o>. This will work perfectly well with
