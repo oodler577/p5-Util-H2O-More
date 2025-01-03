@@ -465,49 +465,25 @@ based on C<Util::H2O::h2o> presented in this module.
 
 =head1 DESCRIPTION
 
-C<Util::H2O::h2o> provides a very compelling approach that allows
-one to incrementally add I<OOP> into their Perl. At the very least
-it makes dealing with C<HASH> references much easier, and without
-the committment to a full Perl I<OOP> framework. Perl is meant to
-be I<multi-paradigm>, which means that it should be easy to mix the
-best of different methods into one glorious creation. L<Util::H2O>,
-and by extension, C<Util::H2O::More>; seeks to accomplish making it
-possible for I<OOP> concepts.
+C<Util::H2O::h2o> provides a very compelling approach that allows one
+to incrementally add I<OOP> into their Perl. At the very least it makes
+dealing with C<HASH> references much easier, and without the committment
+to a full Perl I<OOP> framework. Perl is meant to be I<multi-paradigm>,
+which means that it should be easy to mix the best of different methods into
+one glorious creation. L<Util::H2O>, and by extension, C<Util::H2O::More>;
+seeks to accomplish making it possible for I<OOP> concepts.
 
 C<Util::H2O::h2o> is a deceptively powerful tool that, above all, makes
 it I<easy> and I<fun> to add accessors to I<ad hoc> C<HASH>references
-that many Perl developers like to use and that get returned,
-I<unblessed> by many popular modules. For example, L<HTTP::Tiny>,
-L<Web::Scraper>, and the more common I<select%> methods L<DBI>
-flavors implement. In particular, any L<JSON> returned by a
-L<HTTP::Tiny> web request is not just ublessed, but still serialized.
-Yet another great example is the configuration object returned by
-the very popular module, L<Config::Tiny>.
+that many Perl developers like to use and that get returned, I<unblessed>
+by many popular modules. For example, L<HTTP::Tiny>, L<Web::Scraper>, and
+the more common I<select%> methods L<DBI> flavors implement. In particular,
+any L<JSON> returned by a L<HTTP::Tiny> web request is not just ublessed,
+but still serialized.  Yet another great example is the configuration object
+returned by the very popular module, L<Config::Tiny>.
 
-a primary method this module, C<baptise>, essentially provides the same
-interface as the core keyword C<bless> with an additional I<slurpy> third
-parameter where one may specify a list of default accessors.
-
-Still more useful utilities may be built upon C<h2o>, e.g.; C<d2o>
-which is able to handle data structures that contain C<HASH> references
-buried or nested arbitrarily within C<ARRAY> references.
-
-For example, C<d2o> cleans things up very nicely for dealing with
-web APIs:
-
-  my $response = h2o HTTP::Tiny->get($JSON_API_URL);
-  die if not $response->success;
-  my $JSON_data_with_accessors = d2o JSON::decode_json $response->content;
-
-And even more so when using C<HTTPTiny2h2o>, which uses C<d2o -autoundef>
-internally; ideally resulting in code like the following:
-
-  my $response = HTTPTiny2h2o HTTP::Tiny->get($JSON_API_URL);
-  printf "%s\n", $response->content->someFieldInJSONResponse;
-
-and what started this module; the usage pattern of C<h2o> begs it to be able
-to support being used as a I<drop in> replacement for C<bless>.  But is does
-a fine job as serving as the I<basis> for a I<better bless>.
+And what started this module; the usage pattern of C<h2o> begs it to be able
+to support being used as a I<drop in> replacement for C<bless>.
 
 This module also provides additional methods built using C<h2o> or C<o2h>
 from L<Util::H2O> that allow for the incremental addition of I<OOP> into
@@ -522,16 +498,37 @@ that can provide C<LIST>s of C<HASH> refs,  such as L<Web::Scraper>.
 
 C<d2o> and C<o2d> would not have been added if the author of this module
 had been keeping up with the latest features of C<Util::H2O>.  If nested
-data structure support is what you need, please see if C<h2o>'s C<-array>
-is what you want; it tells C<h2o> to descende into C<ARRAY>s and applies
-C<h2o -recurse> to them if found; this is extremely useful for dealing with
-data structures generated from deserializing JSON (e.g.,).
+data structure support is what you need, please see if C<h2o>'s C<-array> is
+what you want; it tells C<h2o> to descend into C<ARRAY>s and applies C<h2o
+-recurse> to them if found; this is extremely useful for dealing with data
+structures generated from deserializing JSON (e.g.,).
 
 This module provides some other compelling methods, such as those implementing
 the I<cookbook> suggestions described in C<Util::H2O>.  Which make it easier
 to deal with modules such as L<Config::Tiny> (C<ini2h2o>, C<h2o2ini>),
 handle non-compliant keys C<tr4h2o>, or even provide convient access to
 C<Data::Dumper> (via C<ddd>).
+
+The originaly method provided by this module, C<baptise>, accepts the same
+interface as the core keyword C<bless> with an additional I<slurpy> third
+parameter where one may specify a list of default accessors.
+
+Still more useful utilities may be built upon C<h2o>, e.g.; C<d2o> which
+is able to handle data structures that contain C<HASH> references buried or
+nested arbitrarily within C<ARRAY> references.
+
+For example, C<d2o> cleans things up very nicely for dealing with
+web APIs:
+
+  my $response = h2o HTTP::Tiny->get($JSON_API_URL);
+  die if not $response->success;
+  my $JSON_data_with_accessors = d2o JSON::decode_json $response->content;
+
+And even more so when using C<HTTPTiny2h2o>, which uses C<d2o -autoundef>
+internally; ideally resulting in code like the following:
+
+  my $response = HTTPTiny2h2o HTTP::Tiny->get($JSON_API_URL);
+  printf "%s\n", $response->content->someFieldInJSONResponse;
 
 You may have come here for the C<baptise>, but stay for the other stuff -all
 built with the purpose of showing people I<the way> to cleaning up their
