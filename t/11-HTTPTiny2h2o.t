@@ -56,18 +56,28 @@ is_deeply o2d($HTTPTiny_response2->content), $HoAoH, q{Deep hash of arrays of ha
 
 is $HTTPTiny_response2->content->doesnotexist, undef, q{handles 'content' that points to undef setting it -autoundef};
 
-my $bad_json = {
+my $bad_json1 = {
   status  => 200,
   content => 'this is definitely not JSON',
 };
 
-dies_ok { HTTPTiny2h2o($bad_json) } q{non-JSON in 'content' of the response object causes decode_json to die}; 
+dies_ok { HTTPTiny2h2o -autothrow, $bad_json1 } q{non-JSON in 'content' of the response object causes decode_json to die}; 
+
+my $bad_json2 = {
+  status  => 200,
+  content => 'this is definitely not JSON',
+};
+
+HTTPTiny2h2o $bad_json2;
+is $bad_json2->content, q{this is definitely not JSON}, q{not using '-autothrow' on bad JSON returns original content via ->content accessor};
+like ref $bad_json2, qr/Util::H2O/, q{ref type of response reference is Util::H2O};
+is ref $bad_json2->content, "", q{ref type of ->content is empty string};
 
 my $bad_resp = {
   status  => 200,
 };
 
-dies_ok { HTTPTiny2h2o($bad_json) } q{missing 'content' HASH key in provided reference cause pre-check to die}; 
+dies_ok { HTTPTiny2h2o $bad_resp} q{missing 'content' HASH key in provided reference cause pre-check to die}; 
 
 # content is an empty
 my $HTTPTiny_response3 = {
