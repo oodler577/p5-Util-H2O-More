@@ -79,15 +79,28 @@ sub tr4h2o($) {
 # Getopt to keys
 sub opt2h2o(@) {
     my @getopt_def = @_;
-    my @flags_only = map { m/([^=|\s]+)/g; $1 } @getopt_def;
+    my @flags_only = map { m/([^=!|\s]+)/g; $1 } @getopt_def;
     return @flags_only;
 }
 
 # wrapper around opt2h2o (yeah!)
 sub Getopt2h2o(@) {
+    my $autoundef;
+    if ( @_ && $_[0] && !ref$_[0] && $_[0]=~/^-autoundef/ ) {
+      $autoundef = shift;
+    }
     my ( $ARGV_ref, $defaults, @opts ) = @_;
     $defaults //= {};
-    my $o = h2o $defaults, opt2h2o(@opts);
+    if ($autoundef) {
+      $defaults->{AUTOLOAD} = sub {
+        my $self = shift;
+        our $AUTOLOAD;
+        ( my $key = $AUTOLOAD ) =~ s/.*:://;
+        die qq{Getopt2h2o: Won't set value for non-existing key. Need it? Let the module author know!\n} if @_;
+        return undef;
+      };
+    }
+    my $o = h2o -meth, $defaults, opt2h2o(@opts);
     require Getopt::Long;
     Getopt::Long::GetOptionsFromArray( $ARGV_ref, $o, @opts );    # Note, @ARGV is passed by reference
     return $o;
