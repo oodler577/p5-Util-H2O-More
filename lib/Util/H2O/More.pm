@@ -220,20 +220,22 @@ sub a2o($) {
     ## add vmethod to wrap around array_refs
 
     # return item at index INDEX
-    my $GET = sub { my ( $self, $i ) = @_; return $self->[$i]; };
+    my $GET = sub {
+      my ( $self, $i ) = @_;
+      return undef if $i > $#{$self}; # prevent ARRAY from growing just to get an undef back
+      return $self->[$i];
+    };
     *{"${a2o_pkg}::get"} = $GET;
-
-    # return item at index INDEX - short version (i() is a mnemonic for 'index')
-    my $i = sub { my ( $self, $i ) = @_; return $self->[$i]; };
-    *{"${a2o_pkg}::i"} = $i;
+    *{"${a2o_pkg}::i"}   = $GET;
 
     # return rereferenced ARRAY
     my $ALL = sub { my $self = shift; return @$self; };
     *{"${a2o_pkg}::all"} = $ALL;
 
-    # returns value returned by the 'scalar' keyword
+    # returns value returned by the 'scalar' keyword, alias also to 'count'
     my $SCALAR = sub { my $self = shift; return scalar @$self; };
     *{"${a2o_pkg}::scalar"} = $SCALAR;
+    *{"${a2o_pkg}::count"}  = $SCALAR;
 
     # 'push' will apply "d2o" to all elements pushed
     my $PUSH = sub { my ( $self, @i ) = @_; d2o \@i; push @$self, @i; return \@i };
@@ -340,15 +342,24 @@ sub yaml2o($) {
 # This method assumes a response HASH reference returned by HTTP::Tiny; so
 # it looks for $ref->{content}, and if anything is found there it will attempt
 # to turn it into a Perl data structure usin JSON::XS::Maybe::decode_json; it
-# them applies "d2o -autoundef" to it
+# them applies "d2o -autoundef" to it; if the JSON decode fails, it will throw
+# a 'die' and propagate the exception up; this will only happen if 'content' is
+# defined and the JSON is malformed 
+# Maybe TODO - look at and respect content type header??
 sub HTTPTiny2h2o($) {
   my $ref = shift;
   if (ref $ref eq q{HASH} and exists $ref->{content}) {
     require JSON::MaybeXS; # tries to load the JSON module you want, exports decode_json, encode_json
     h2o $ref, qw/content/;
     if ($ref->content) {
-      my $content = d2o -autoundef, JSON::MaybeXS::decode_json($ref->content); # this may die
-      $ref->content($content);  
+      # the JSON decode will die on bad JSON 
+      my $JSON = JSON::MaybeXS::decode_json($ref->content);
+      my $content= d2o -autoundef, $JSON;
+      $ref->content($content);
+    }
+    else {
+      my $content= d2o -autoundef, {};
+      $ref->content($content);
     }
   }
   else {
@@ -624,6 +635,11 @@ which are generally returned as C<HASH> references of the form,
     ...
   }
 
+If you are not using L<HTTP::Tiny> as your user agent or the actual contents
+in the response are either not JSON or not really predictable, then this
+method is probably not going to be very useful. Please read-on to see if
+this is actually the case.
+
 The method is aware of this structure, and if the C<content> key exists,
 it will decode the contents of C<content> as JSON, and if successful will
 apply C<d2o -autoundef> to it. The ideal result is that the serialized JSON
@@ -652,10 +668,15 @@ Or more succinctly,
   
   say $response->content->herp;             # says "derp" 
 
+If the content are undefined, then this method will return an empty HASH
+reference with C<d2o -autoundef> applied, so any method can be applied to
+it, and it'll return C<undef>.
+
 =head3 C<HTTPTiny2h2o> May C<die>!
 
 If something is wrong with C<REF>, then C<HTTPTiny2h2o> will throw an exception
-via C<die>, so it's good to be confident of what you're passing to it.
+via C<die>, so it's good to be confident of what you're passing to it. I.e., if
+it doesn't look like it came from L<HTTP::Tiny>.
 
 Similarly, any exceptions thrown by L<JSON::MaybeXS>'s C<decode_json> is allowed
 to propagate up.

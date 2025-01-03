@@ -50,9 +50,11 @@ HTTPTiny2h2o $HTTPTiny_response2;
 
 is $HTTPTiny_response2->content->ten->thirteen, 13, q{Accessor for deeply nested key found as expected};
 
-is $HTTPTiny_response2->content->ten->doesntexist, undef, q{'undef' returned for non-existing key, due to use of 'd2o -autoundef'};
+is $HTTPTiny_response2->content->ten->doesntexist, undef, q{'undef' returned for non-existing key, due to internal use of 'd2o -autoundef'};
 
 is_deeply o2d($HTTPTiny_response2->content), $HoAoH, q{Deep hash of arrays of hashes encoded as JSON was decoded properly};
+
+is $HTTPTiny_response2->content->doesnotexist, undef, q{handles 'content' that points to undef setting it -autoundef};
 
 my $bad_json = {
   status  => 200,
@@ -66,5 +68,26 @@ my $bad_resp = {
 };
 
 dies_ok { HTTPTiny2h2o($bad_json) } q{missing 'content' HASH key in provided reference cause pre-check to die}; 
+
+# content is an empty
+my $HTTPTiny_response3 = {
+  status  => 200,
+  content => undef,
+};
+
+HTTPTiny2h2o $HTTPTiny_response3;
+
+is $HTTPTiny_response3->content->doesnotexist, undef, q{handles 'content' that points to undef setting it -autoundef};
+
+note "Testing JSON containers other than expected HASH - still underdeveloped area";
+# content is an empty array
+my $HTTPTiny_response4 = {
+  status  => 200,
+  content => "[]",
+};
+
+HTTPTiny2h2o $HTTPTiny_response4;
+is $HTTPTiny_response4->content->get(1), undef, q{empty JSON array makes 'get' AREF vmethod return undef };
+is $HTTPTiny_response4->content->scalar, 0, q{empty JSON array makes 'scalar' AREF vmethod return undef };
 
 done_testing;
