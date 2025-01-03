@@ -1125,12 +1125,21 @@ Items that are C<shift>'d are returned for convenient assignment.
 
 Similar to C<pop>, just operates on the near end of the C<ARRAY>.
 
-=head3 C<scalar>
+=head3 C<scalar>, C<count>
 
-Returns the number of items in the C<ARRAY> container, which is more
-convenient that doing,
+Returns the number of items in the C<ARRAY> container,
+
+  my $count = $root->some->barray->scalar;
+
+which is more convenient that doing,
 
   my $count = scalar @{$root->some->barray->all};
+
+It's also aliased as, C<count>
+
+  my $count = $root->some->barray->count;
+
+Returns C<0> if the array is empty (as one would expect C<scalar> to do).
 
 =head2 Debugging Methods
 
