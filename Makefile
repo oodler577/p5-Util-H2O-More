@@ -4,7 +4,7 @@ clean:
 test: clean
 	dzil test
 
-prepare: clean
+release: clean
 	dzil build 
 	mv -vf *.tar.gz ./releases/ 
 	dzil clean
